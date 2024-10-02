@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="30092024" author="Aleksei Baiukov">
+        <sql>
+            COMMENT ON COLUMN account.id IS 'Identification number of an account';
+            COMMENT ON COLUMN account.user_id IS 'Identification number of the related user';
+            COMMENT ON COLUMN account.type IS 'Account type like current, saving etc';
+            COMMENT ON COLUMN account.currency IS 'Currency for the account in ISO-4217 format';
+            COMMENT ON COLUMN account.initial_amount IS 'Initial balance of the account';
+            COMMENT ON COLUMN account.intereset_rate IS 'An amount of the interest rate if it is loan or saving account';
+            COMMENT ON COLUMN account.goal_amount IS 'The desired amount of money for the defined goal';
+            COMMENT ON COLUMN account.already_paid_amount IS 'An amount of money, which has already been paid out for loan';
+            COMMENT ON COLUMN account.is_removed IS 'If account has been removed';
+            COMMENT ON COLUMN account.removed_at IS 'A date when account has been removed';
+            COMMENT ON COLUMN account.created_at IS 'A date when account has been created';
+            COMMENT ON COLUMN account.update_at IS 'A date when the reocrd has been changed';
+
+            COMMENT ON COLUMN assets.id IS 'Identification number of an asset';
+            COMMENT ON COLUMN assets.account_id IS 'Identification number of the account, to which the asset belongs';
+            COMMENT ON COLUMN assets.name IS 'A name of the account defined by user';
+            COMMENT ON COLUMN assets.acquisition_price IS 'An amount of money, which has been paid, in order to get the asset';
+            COMMENT ON COLUMN assets.start_date IS 'A date when the asset put onto operation';
+            COMMENT ON COLUMN assets.end_date IS 'A date of asset elimination';
+            COMMENT ON COLUMN assets.color IS 'An user desired color';
+            COMMENT ON COLUMN assets.icon IS 'A name of the user desired icon';
+            COMMENT ON COLUMN assets.is_removed IS 'If asset has been removed';
+            COMMENT ON COLUMN assets.removed_at IS 'A date when asset has been removed';
+            COMMENT ON COLUMN assets.created_at IS 'A date when asset has been created';
+            COMMENT ON COLUMN assets.update_at IS 'A date when the reocrd has been changed';
+
+            COMMENT ON COLUMN categories.id IS 'Identification number of a category';
+            COMMENT ON COLUMN categories.icon IS 'A name of the user desired icon';
+            COMMENT ON COLUMN categories.name IS 'A name of the category defined by user';
+            COMMENT ON COLUMN categories.color IS 'An user desired color';
+            COMMENT ON COLUMN categories.created_at IS 'A date when category has been created';
+            COMMENT ON COLUMN categories.update_at IS 'A date when the reocrd has been changed';
+
+            COMMENT ON COLUMN general_statements.file_name IS 'A path to the file of stored generated general statement';
+            COMMENT ON COLUMN general_statements.from_date IS 'A date from which general statement has been generated';
+            COMMENT ON COLUMN general_statements.to_date IS 'A date to which general statement has been generated';
+
+            COMMENT ON COLUMN groups.id IS 'Identification number of a group';
+            COMMENT ON COLUMN groups.group_name IS 'A name of the group defined by user';
+            COMMENT ON COLUMN groups.created_at IS 'A date when group has been created';
+            COMMENT ON COLUMN groups.update_at IS 'A date when the reocrd has been changed';
+
+            COMMENT ON COLUMN repeating_transactions.id IS 'Identification number of a repeating transaction';
+            COMMENT ON COLUMN repeating_transactions.basis IS 'How often transaction is being repeated (monthly, yearly, etc.)';
+            COMMENT ON COLUMN repeating_transactions.transaction_sample_id IS 'An instance of transaction which is being repeated';
+            COMMENT ON COLUMN repeating_transactions.last_repeated_at IS 'Time when this transaction has been executed last';
+            COMMENT ON COLUMN repeating_transactions.remind_days_before IS 'Amount of days before transaction, when user must be notified';
+            COMMENT ON COLUMN repeating_transactions.created_at IS 'A date when repeating transaction has been created';
+            COMMENT ON COLUMN repeating_transactions.update_at IS 'A date when the reocrd has been changed';
+
+            COMMENT ON COLUMN transaction.id IS 'Identification number of a transaction';
+            COMMENT ON COLUMN transaction.account_id IS 'Identification number of the account related to the transaction';
+            COMMENT ON COLUMN transaction.for_asset_id IS 'A name of the asset, to which is transaction related';
+            COMMENT ON COLUMN transaction.receiver_id IS 'If transaction has receiver, which is also an account in db, it must be stored';
+            COMMENT ON COLUMN transaction.type IS 'Type of transaction (income, expense etc)';
+            COMMENT ON COLUMN transaction.amount IS 'Amount of money for the transaction';
+            COMMENT ON COLUMN transaction.execution_date IS 'A date when transaction has been executed';
+            COMMENT ON COLUMN transaction.note IS 'Any description written by user for the transaction';
+            COMMENT ON COLUMN transaction.place_lat IS 'Lattitude of the transaction place';
+            COMMENT ON COLUMN transaction.place_lon IS 'Longitude of the transaction place';
+            COMMENT ON COLUMN transaction.photo IS 'A path to the photo attached by user';
+            COMMENT ON COLUMN transaction.is_removed IS 'If transaction has been removed';
+            COMMENT ON COLUMN transaction.removed_at IS 'A date when transaction has been removed';
+            COMMENT ON COLUMN transaction.created_at IS 'A date when transaction has been created';
+
+            COMMENT ON COLUMN users.id IS 'Identification number of an user';
+            COMMENT ON COLUMN users.email IS 'Email adress provided by user';
+            COMMENT ON COLUMN users.username IS 'Short unique name defined by user';
+            COMMENT ON COLUMN users.password IS 'Hashed password of the user';
+            COMMENT ON COLUMN users.pincode IS 'If user set addition pincode on enter';
+            COMMENT ON COLUMN users.is_blocked IS 'If user is blocked and get get into the account';
+            COMMENT ON COLUMN users.is_admin IS 'If user has admin rights';
+            COMMENT ON COLUMN users.created_at IS 'A date when user has been created';
+            COMMENT ON COLUMN users.update_at IS 'A date when the reocrd has been changed';
+
+            COMMENT ON COLUMN groups_account_relation.account_id IS 'Identification number of a related account';
+            COMMENT ON COLUMN groups_account_relation.group_id IS 'Identification number of a related group';
+
+            COMMENT ON COLUMN transactions_categories.transaction_id IS 'Identification number of a related transaction';
+            COMMENT ON COLUMN transactions_categories.category_id IS 'Identification number of a related account';
+
+            COMMENT ON COLUMN user_account_relation.account_id IS 'Identification number of a related user';
+            COMMENT ON COLUMN user_account_relation.group_id IS 'Identification number of a related group';
+        </sql>
+
+        <rollback>
+
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
