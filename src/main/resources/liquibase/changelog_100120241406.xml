@@ -7,27 +7,61 @@
 
     <changeSet id="30092024" author="Aleksei Baiukov">
         <sql>
+
             create table Account
             (
                 id                  VARCHAR2(127) not null,
                 user_id             VARCHAR2(127) not null,
-                name                CHAR(1023)                         not null,
+                name                CHAR(1023)                        not null,
                 type                VARCHAR2(31) not null,
                 currency            VARCHAR2(3) default 'CZK' not null,
                 initial_amount      NUMBER(8,2) default 0 not null,
-                interest_rate       INTEGER  default 0,
+                interest_rate       INTEGER default 0,
                 goal_amount         NUMBER(8,2) default 0,
                 already_paid_amount NUMBER(8,2) default 0,
-                is_removed          NUMBER(1) default 0                 not null,
+                is_removed          NUMBER(1) default 0 not null,
                 removed_at          DATE,
-                created_at          DATE     default SYSDATE not null,
-                updated_at          DATE     default SYSDATE not null,
+                created_at          DATE    default CURRENT_TIMESTAMP not null,
+                updated_at          DATE    default CURRENT_TIMESTAMP not null,
                 constraint PK_ACCOUNT primary key (id)
             );
 
-            create index has_account_FK on Account (
-                user_id ASC
+            create table Users
+            (
+                id         VARCHAR2(127) not null,
+                email      VARCHAR2(127) not null,
+                username   VARCHAR2(255) not null,
+                password   VARCHAR2(127) not null,
+                pincode    VARCHAR2(127),
+                is_blocked NUMBER(1) default 0 not null,
+                is_admin   NUMBER(1) default 0 not null,
+                created_at DATE default CURRENT_TIMESTAMP not null,
+                updated_at DATE default CURRENT_TIMESTAMP not null,
+                constraint PK_USERS primary key (id)
             );
+
+            create table Account_user_rights
+            (
+                user_id    VARCHAR2(127) not null,
+                account_id VARCHAR2(127) not null,
+                is_owner   NUMBER(1),
+                rights     VARCHAR2(64),
+                created_at DATE,
+                updated_at DATE,
+                constraint PK_ACCOUNT_USER_RIGHTS primary key (user_id, account_id),
+                constraint FK_ACCOUNT__ACCOUNT_B_USERS foreign key (user_id)
+                    references Users (id),
+                constraint FK_ACCOUNT__USER_HAS__ACCOUNT foreign key (account_id)
+                    references Account (id)
+            );
+
+            create index account_belong_to_group_FK on Account_user_rights (
+                                                                            user_id ASC
+                );
+
+            create index group_has_account_FK on Account_user_rights (
+                                                                      account_id ASC
+                );
 
             create table Assets
             (
@@ -35,19 +69,21 @@
                 account_id        VARCHAR2(127) not null,
                 name              VARCHAR2(255) not null,
                 acquisition_price NUMBER(8,2) not null,
-                start_date             DATE     default SYSDATE not null,
-                end_date               DATE,
+                start_date        DATE default CURRENT_TIMESTAMP not null,
+                end_date          DATE,
                 color             VARCHAR2(31),
                 icon              VARCHAR2(127),
                 is_removed        NUMBER(1) default 0,
                 removed_at        DATE,
-                created_at        DATE     default SYSDATE not null,
-                updated_at        DATE     default SYSDATE not null,
-                constraint PK_ASSETS primary key (id)
+                created_at        DATE default CURRENT_TIMESTAMP not null,
+                updated_at        DATE default CURRENT_TIMESTAMP not null,
+                constraint PK_ASSETS primary key (id),
+                constraint FK_ASSETS_HAS_ASSET_ACCOUNT foreign key (account_id)
+                    references Account (id)
             );
 
             create index has_assets_FK on Assets (
-                account_id ASC
+                                                  account_id ASC
             );
 
             create table Categories
@@ -61,202 +97,138 @@
                 constraint PK_CATEGORIES primary key (id)
             );
 
-            create table Generated_statements
-            (
-                file_name VARCHAR2(255) not null,
-                from_date      DATE not null,
-                to_date        DATE not null
-            );
-
             create table Groups
             (
                 id         VARCHAR2(127) not null,
                 group_name VARCHAR2(1023) not null,
+                group_code VARCHAR2(16),
                 created_at DATE not null,
                 updated_at DATE not null,
                 constraint PK_GROUPS primary key (id)
             );
 
-            create table Repeating_transactions
+            create table Transaction
+            (
+                id             VARCHAR2(127) not null,
+                account_id     VARCHAR2(127) not null,
+                for_asset_id   VARCHAR2(127),
+                receiver_id    VARCHAR2(127),
+                type           VARCHAR2(31) not null,
+                amount         NUMBER(8,2) not null,
+                execution_date DATE,
+                note           VARCHAR2(2047),
+                place_lat      FLOAT,
+                place_lon      FLOAT,
+                photo          VARCHAR2(511),
+                is_removed     NUMBER(1) default 0 not null,
+                removed_at     DATE,
+                created_at     DATE not null,
+                constraint PK_TRANSACTION primary key (id),
+                constraint FK_TRANSACT_HAS_TRANS_ACCOUNT foreign key (account_id)
+                    references Account (id),
+                constraint FK_TRANSACT_RELATED_T_ASSETS foreign key (for_asset_id)
+                    references Assets (id)
+            );
+
+            create table Standing_orders
             (
                 id                    VARCHAR2(127) not null,
-                basis                 VARCHAR2(63) not null,
+                frequency             VARCHAR2(63) not null,
                 transaction_sample_id VARCHAR2(127) not null,
-                last_repeated_at      DATE default SYSDATE not null,
+                last_repeated_at      DATE default CURRENT_TIMESTAMP not null,
                 remind_days_before    INTEGER,
                 created_at            DATE                           not null,
                 updated_at            DATE                           not null,
-                constraint PK_REPEATING_TRANSACTIONS primary key (id)
-            );
-
-            create table Transaction
-            (
-                id           VARCHAR2(127) not null,
-                account_id   VARCHAR2(127) not null,
-                for_asset_id VARCHAR2(127),
-                receiver_id  VARCHAR2(127),
-                type         VARCHAR2(31) not null,
-                amount       NUMBER(8,2) not null,
-                execution_date         DATE,
-                note         VARCHAR2(2047),
-                place_lat    FLOAT,
-                place_lon    FLOAT,
-                photo        VARCHAR2(511),
-                is_removed   NUMBER(1) default 0 not null,
-                removed_at   DATE,
-                created_at   DATE               not null,
-                constraint PK_TRANSACTION primary key (id)
+                constraint PK_STANDING_ORDERS primary key (id),
+                constraint FK_STANDING_IS_REPEAT_TRANSACT foreign key (id)
+                    references Transaction (id)
             );
 
             create index has_transactions_FK on Transaction (
-                 account_id ASC
-            );
+                                                             account_id ASC
+                );
 
             create index related_transactions_FK on Transaction (
-                 for_asset_id ASC
-            );
-
-            create table Users
-            (
-                id         VARCHAR2(127) not null,
-                email      VARCHAR2(127) not null,
-                username   VARCHAR2(255) not null,
-                password   VARCHAR2(127) not null,
-                pincode    VARCHAR2(4),
-                is_blocked NUMBER(1) default 0                 not null,
-                is_admin   NUMBER(1) default 0                 not null,
-                created_at DATE     default SYSDATE not null,
-                updated_at DATE     default SYSDATE not null,
-                constraint PK_USERS primary key (id)
-            );
-
-            create table group_account_relation
-            (
-                account_id VARCHAR2(127) not null,
-                group_id   VARCHAR2(127) not null,
-                constraint PK_GROUP_ACCOUNT_RELATION primary key (account_id, group_id)
-            );
-
-            create index account_belong_to_group_FK on group_account_relation (
-                group_id ASC
-            );
-
-            create index group_has_account_FK on group_account_relation (
-                account_id ASC
-            );
+                                                                 for_asset_id ASC
+                );
 
             create table transactions_categories
             (
                 transaction_id VARCHAR2(127) not null,
                 category_id    VARCHAR2(127) not null,
-                constraint PK_TRANSACTIONS_CATEGORIES primary key (transaction_id, category_id)
+                constraint PK_TRANSACTIONS_CATEGORIES primary key (transaction_id, category_id),
+                constraint FK_TRANSACT_CATEGORIE_TRANSACT foreign key (transaction_id)
+                    references Transaction (id),
+                constraint FK_TRANSACT_TRANSACTI_CATEGORI foreign key (category_id)
+                    references Categories (id)
             );
 
             create index tags_to_transaction_details_FK on transactions_categories (
-                transaction_id ASC
-            );
+                                                                                    transaction_id ASC
+                );
 
             create index transaction_details_to_tags_FK on transactions_categories (
-                category_id ASC
-            );
+                                                                                    category_id ASC
+                );
 
-            create table user_account_relation
+            create table user_group_relation
             (
                 user_id  VARCHAR2(127) not null,
                 group_id VARCHAR2(127) not null,
-                constraint PK_USER_ACCOUNT_RELATION primary key (user_id, group_id)
+                constraint PK_USER_GROUP_RELATION primary key (user_id, group_id),
+                constraint FK_USER_ACC_USER_BELO_GROUPS foreign key (group_id)
+                    references Groups (id),
+                constraint FK_USER_ACC_GROUP_HAS_USERS foreign key (user_id)
+                    references Users (id)
             );
 
-            create index user_belong_to_group_FK on user_account_relation (
-                group_id ASC
-            );
+            create index user_belong_to_group_FK on user_group_relation (
+                                                                           group_id ASC
+                );
 
-            create index group_has_user_FK on user_account_relation (
-                user_id ASC
-            );
-
-            alter table Account
-                add constraint FK_ACCOUNT_HAS_ACCOU_USERS foreign key (user_id)
-                    references Users (id);
-
-            alter table Assets
-                add constraint FK_ASSETS_HAS_ASSET_ACCOUNT foreign key (account_id)
-                    references Account (id);
-
-            alter table Repeating_transactions
-                add constraint FK_REPEATIN_IS_REPEAT_TRANSACT foreign key (id)
-                    references Transaction (id);
-
-            alter table Transaction
-                add constraint FK_TRANSACT_HAS_TRANS_ACCOUNT foreign key (account_id)
-                    references Account (id);
-
-            alter table Transaction
-                add constraint FK_TRANSACT_RELATED_T_ASSETS foreign key (for_asset_id)
-                    references Assets (id);
-
-            alter table group_account_relation
-                add constraint FK_GROUP_AC_ACCOUNT_B_GROUPS foreign key (group_id)
-                    references Groups (id);
-
-            alter table group_account_relation
-                add constraint FK_GROUP_AC_GROUP_HAS_ACCOUNT foreign key (account_id)
-                    references Account (id);
-
-            alter table transactions_categories
-                add constraint FK_TRANSACT_CATEGORIE_TRANSACT foreign key (transaction_id)
-                    references Transaction (id);
-
-            alter table transactions_categories
-                add constraint FK_TRANSACT_TRANSACTI_CATEGORI foreign key (category_id)
-                    references Categories (id);
-
-            alter table user_account_relation
-                add constraint FK_USER_ACC_GROUP_HAS_USERS foreign key (user_id)
-                    references Users (id);
-
-            alter table user_account_relation
-                add constraint FK_USER_ACC_USER_BELO_GROUPS foreign key (group_id)
-                    references Groups (id);
+            create index group_has_user_FK on user_group_relation (
+                                                                     user_id ASC
+                );
         </sql>
 
         <rollback>
-            alter table Account drop
-            constraint FK_ACCOUNT_HAS_ACCOU_USERS;
+            alter table Account_user_rights
+            drop constraint FK_ACCOUNT__ACCOUNT_B_USERS;
 
-            alter table Assets drop
-            constraint FK_ASSETS_HAS_ASSET_ACCOUNT;
+            alter table Account_user_rights
+            drop constraint FK_ACCOUNT__USER_HAS__ACCOUNT;
 
-            alter table Repeating_transactions drop
-            constraint FK_REPEATIN_IS_REPEAT_TRANSACT;
+            alter table Assets
+            drop constraint FK_ASSETS_HAS_ASSET_ACCOUNT;
 
-            alter table Transaction drop
-            constraint FK_TRANSACT_HAS_TRANS_ACCOUNT;
+            alter table Standing_orders
+            drop constraint FK_STANDING_IS_REPEAT_TRANSACT;
 
-            alter table Transaction drop
-            constraint FK_TRANSACT_RELATED_T_ASSETS;
+            alter table Transaction
+            drop constraint FK_TRANSACT_HAS_TRANS_ACCOUNT;
 
-            alter table group_account_relation drop
-            constraint FK_GROUP_AC_ACCOUNT_B_GROUPS;
+            alter table Transaction
+            drop constraint FK_TRANSACT_RELATED_T_ASSETS;
 
-            alter table group_account_relation drop
-            constraint FK_GROUP_AC_GROUP_HAS_ACCOUNT;
+            alter table transactions_categories
+            drop constraint FK_TRANSACT_CATEGORIE_TRANSACT;
 
-            alter table transactions_categories drop
-            constraint FK_TRANSACT_CATEGORIE_TRANSACT;
+            alter table transactions_categories
+            drop constraint FK_TRANSACT_TRANSACTI_CATEGORI;
 
-            alter table transactions_categories drop
-            constraint FK_TRANSACT_TRANSACTI_CATEGORI;
+            alter table user_group_relation
+            drop constraint FK_USER_ACC_GROUP_HAS_USERS;
 
-            alter table user_account_relation drop
-            constraint FK_USER_ACC_GROUP_HAS_USERS;
-
-            alter table user_account_relation drop
-            constraint FK_USER_ACC_USER_BELO_GROUPS;
-
-            drop index has_account_FK;
+            alter table user_group_relation
+            drop constraint FK_USER_ACC_USER_BELO_GROUPS;
 
             drop table Account cascade constraints;
+
+            drop index group_has_account_FK;
+
+            drop index account_belong_to_group_FK;
+
+            drop table Account_user_rights cascade constraints;
 
             drop index has_assets_FK;
 
@@ -264,11 +236,9 @@
 
             drop table Categories cascade constraints;
 
-            drop table Generated_statements cascade constraints;
-
             drop table Groups cascade constraints;
 
-            drop table Repeating_transactions cascade constraints;
+            drop table Standing_orders cascade constraints;
 
             drop index related_transactions_FK;
 
@@ -277,12 +247,6 @@
             drop table Transaction cascade constraints;
 
             drop table Users cascade constraints;
-
-            drop index group_has_account_FK;
-
-            drop index account_belong_to_group_FK;
-
-            drop table group_account_relation cascade constraints;
 
             drop index transaction_details_to_tags_FK;
 
@@ -294,7 +258,7 @@
 
             drop index user_belong_to_group_FK;
 
-            drop table user_account_relation cascade constraints;
+            drop table user_group_relation cascade constraints;
         </rollback>
     </changeSet>
 
