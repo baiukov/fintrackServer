@@ -27,6 +27,9 @@ public class User {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private AccountUserRights accountUserRights;
+
     @Column(name = "email")
     private String email;
 
