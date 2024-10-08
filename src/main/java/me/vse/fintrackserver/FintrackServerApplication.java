@@ -1,20 +1,20 @@
 package me.vse.fintrackserver;
 
 import jakarta.persistence.EntityManager;
+import me.vse.fintrackserver.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import java.util.UUID;
 
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "me.vse.fintrackserver")
 public class FintrackServerApplication {
 
-    @Autowired
-    private static EntityManager entityManager;
 
     public static void main(String[] args) {
-
-//        Test test = new Test(1L, "icon", "name", "color", null, null);
-//        entityManager.persist(test);
         SpringApplication.run(FintrackServerApplication.class, args);
     }
 
