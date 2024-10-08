@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @ToString
-//@IdClass(AccountUserRightsId.class)
 public class AccountUserRights {
 
     @Id

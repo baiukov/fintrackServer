@@ -1,5 +1,6 @@
 package me.vse.fintrackserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import me.vse.fintrackserver.enums.AccountType;
@@ -18,6 +19,20 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @ToString
+@NamedEntityGraph(
+        name = "account.plain",
+        attributeNodes = {
+                @NamedAttributeNode("id"),
+                @NamedAttributeNode("name"),
+                @NamedAttributeNode("type"),
+                @NamedAttributeNode("currency"),
+                @NamedAttributeNode("initialAmount"),
+                @NamedAttributeNode("interestRate"),
+                @NamedAttributeNode("goalAmount"),
+                @NamedAttributeNode("alreadyPaidAmount"),
+                @NamedAttributeNode("isRemoved")
+        }
+)
 public class Account {
 
     @Id
@@ -25,7 +40,9 @@ public class Account {
     @Column(name = "id", unique = true, updatable = false)
     private String id;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "account")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "account")
+    @ToString.Exclude
+    @JsonIgnore
     private List<AccountUserRights> userRights;
 
     @Column(name = "name")

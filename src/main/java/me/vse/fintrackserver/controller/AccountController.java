@@ -1,6 +1,8 @@
 package me.vse.fintrackserver.controller;
 
 import me.vse.fintrackserver.model.dto.requests.AccountAddRequestDto;
+import me.vse.fintrackserver.model.dto.requests.UserId;
+import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,5 +27,11 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
     }
+
+    @PostMapping("/retrieveAll")
+    public ResponseEntity<?> retrieveAll(@RequestBody UserId userId) {
+        return ResponseEntity.ok(accountService.retrieveAll(userId.getUserId()));
+    }
+
 
 }

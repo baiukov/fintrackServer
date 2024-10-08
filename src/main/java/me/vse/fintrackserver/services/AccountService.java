@@ -15,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Currency;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AccountService {
@@ -54,7 +58,7 @@ public class AccountService {
                 .build();
 
         entityManager.persist(account);
-        
+
         AccountUserRights userRights = AccountUserRights.builder()
                 .user(owner)
                 .account(account)
@@ -62,10 +66,16 @@ public class AccountService {
                 .isOwner(true)
                 .build();
 
-
         entityManager.persist(userRights);
 
         return account;
+    }
+
+    public List<Account> retrieveAll(String userId) {
+        return entityManager.find(User.class, userId).getAccountUserRights()
+                .stream()
+                .map(AccountUserRights::getAccount)
+                .collect(Collectors.toList());
     }
 
 }

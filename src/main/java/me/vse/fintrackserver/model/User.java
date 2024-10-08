@@ -1,5 +1,6 @@
 package me.vse.fintrackserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,6 +28,8 @@ public class User {
     private String id;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
+    @JsonIgnore
     private List<AccountUserRights> accountUserRights;
 
     @Column(name = "email")
