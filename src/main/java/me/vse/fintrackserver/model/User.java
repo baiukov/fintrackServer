@@ -3,9 +3,11 @@ package me.vse.fintrackserver.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -16,19 +18,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @ToString
-@NamedEntityGraph(
-        name = "user.basic",
-        includeAllAttributes = true
-)
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+    @GeneratedValue(generator = "uuid")
+    @GenericGenerator(name = "uuid", strategy = "me.vse.fintrackserver.utils.UUIDGenerator")
+    @Column(name = "id", unique = true, nullable = false)
+    private String id;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private AccountUserRights accountUserRights;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    private List<AccountUserRights> accountUserRights;
 
     @Column(name = "email")
     private String email;
@@ -56,8 +55,4 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @PrePersist
-    private void prepersist() {
-        System.out.println(this.id);
-    }
 }

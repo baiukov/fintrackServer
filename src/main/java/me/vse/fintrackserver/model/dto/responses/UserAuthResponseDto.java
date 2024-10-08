@@ -13,7 +13,7 @@ import java.util.UUID;
 @ToString
 public class UserAuthResponseDto {
 
-    private UUID id;
+    private String id;
     private String email;
     private String userName;
     private boolean isBlocked;

@@ -7,10 +7,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Currency;
 import java.util.List;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "account")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -24,8 +25,7 @@ public class Account {
     @Column(name = "id", unique = true, updatable = false)
     private String id;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "account_id")
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "account")
     private List<AccountUserRights> userRights;
 
     @Column(name = "name")
@@ -35,13 +35,13 @@ public class Account {
     private AccountType type;
 
     @Column(name = "currency")
-    private String currency;
+    private Currency currency;
 
     @Column(name = "initial_amount")
     private Long initialAmount;
 
     @Column(name = "interest_rate")
-    private short interestRate;
+    private double interestRate;
 
     @Column(name = "goal_amount")
     private Long goalAmount;
@@ -49,7 +49,7 @@ public class Account {
     @Column(name = "already_paid_amount")
     private Long alreadyPaidAmount;
 
-    @Column(name = "is_removed")
+    @Column(name = "is_removed", insertable = false)
     private boolean isRemoved;
 
     @Column(name = "created_at")

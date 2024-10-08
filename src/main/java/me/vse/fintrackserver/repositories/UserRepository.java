@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("select u.id from User u where lower(u.email) = lower(:email)")
     String findByEmail(@Param("email") String email);
 
-    @EntityGraph(value = "user.basic", type = EntityGraph.EntityGraphType.LOAD)
+//    @EntityGraph(value = "user.basic", type = EntityGraph.EntityGraphType.LOAD)
     @Query("select u from User u where lower(u.userName) = lower(:username) or lower(u.email) = lower(:email)")
     User findByUserNameOrEmail(@Param("username") String username, @Param("email") String email);
 }

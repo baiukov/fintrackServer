@@ -16,16 +16,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @ToString
+//@IdClass(AccountUserRightsId.class)
 public class AccountUserRights {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "account_id", referencedColumnName = "id", nullable = false)
     private Account account;
 
     @Column(name = "is_owner")
