@@ -1,16 +1,14 @@
 package me.vse.fintrackserver.controller;
 
-import me.vse.fintrackserver.model.dto.requests.AccountAddRequestDto;
-import me.vse.fintrackserver.model.dto.requests.UserId;
-import me.vse.fintrackserver.repositories.AccountRepository;
+import me.vse.fintrackserver.model.Account;
+import me.vse.fintrackserver.model.dto.AccountDto;
+import me.vse.fintrackserver.rest.requests.AccountAddRequest;
+import me.vse.fintrackserver.rest.requests.UserId;
 import me.vse.fintrackserver.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/account")
@@ -20,7 +18,7 @@ public class AccountController {
     private AccountService accountService;
 
     @PostMapping("/add")
-    public ResponseEntity<?> add(@RequestBody AccountAddRequestDto request) {
+    public ResponseEntity<?> add(@RequestBody AccountAddRequest request) {
         try {
             return ResponseEntity.ok(accountService.add(request));
         } catch (IllegalArgumentException exception) {
@@ -31,6 +29,11 @@ public class AccountController {
     @PostMapping("/retrieveAll")
     public ResponseEntity<?> retrieveAll(@RequestBody UserId userId) {
         return ResponseEntity.ok(accountService.retrieveAll(userId.getUserId()));
+    }
+
+    @PatchMapping("/update")
+    public ResponseEntity<?> update(@RequestBody AccountDto request) {
+        return ResponseEntity.ok(accountService.update(request));
     }
 
 

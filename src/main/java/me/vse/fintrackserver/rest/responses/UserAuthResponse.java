@@ -1,9 +1,7 @@
-package me.vse.fintrackserver.model.dto.responses;
+package me.vse.fintrackserver.rest.responses;
 
 
 import lombok.*;
-
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -11,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class UserAuthResponseDto {
+public class UserAuthResponse {
 
     private String id;
     private String email;

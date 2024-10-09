@@ -1,4 +1,4 @@
-package me.vse.fintrackserver.model.dto.requests;
+package me.vse.fintrackserver.rest.requests;
 
 import lombok.*;
 
@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class UserAuthRequestDto {
+public class UserAuthRequest {
 
     private String email;
     private String userName;
