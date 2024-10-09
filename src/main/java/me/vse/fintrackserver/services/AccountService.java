@@ -6,19 +6,20 @@ import jakarta.transaction.Transactional;
 import me.vse.fintrackserver.enums.AccountType;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.enums.UserRights;
+import me.vse.fintrackserver.mappers.AccountMapper;
 import me.vse.fintrackserver.model.Account;
 import me.vse.fintrackserver.model.AccountUserRights;
 import me.vse.fintrackserver.model.User;
-import me.vse.fintrackserver.model.dto.requests.AccountAddRequestDto;
+import me.vse.fintrackserver.model.dto.AccountDto;
+import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import me.vse.fintrackserver.repositories.AccountRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Currency;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class AccountService {
@@ -29,8 +30,11 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    private AccountMapper accountMapper;
+
     @Transactional
-    public Account add(AccountAddRequestDto accountRequest) {
+    public Account add(AccountAddRequest accountRequest) {
 
         User owner = entityManager.find(User.class, accountRequest.getOwnerId());
         if (owner == null) {
@@ -76,6 +80,13 @@ public class AccountService {
                 .stream()
                 .map(AccountUserRights::getAccount)
                 .collect(Collectors.toList());
+    }
+
+    public Account update(AccountDto accountDto) {
+        Account record = entityManager.find(Account.class, accountDto.getId());
+        accountMapper.updateAccountFromDto(accountDto, record);
+        accountRepository.save(record);
+        return record;
     }
 
 }

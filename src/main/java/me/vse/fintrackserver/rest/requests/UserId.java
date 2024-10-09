@@ -1,4 +1,4 @@
-package me.vse.fintrackserver.model.dto.requests;
+package me.vse.fintrackserver.rest.requests;
 
 
 import lombok.Getter;

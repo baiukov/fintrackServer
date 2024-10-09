@@ -1,20 +1,16 @@
-package me.vse.fintrackserver.model.dto.requests;
+package me.vse.fintrackserver.rest.requests;
 
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import me.vse.fintrackserver.enums.AccountType;
-
-import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountAddRequestDto {
+public class AccountAddRequest {
 
     private String ownerId;
     private String name;

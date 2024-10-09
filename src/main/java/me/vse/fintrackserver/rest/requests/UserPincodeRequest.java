@@ -1,15 +1,13 @@
-package me.vse.fintrackserver.model.dto.requests;
+package me.vse.fintrackserver.rest.requests;
 
 import lombok.*;
-
-import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class UserPincodeRequestDto {
+public class UserPincodeRequest {
 
     private String id;
     private String pincode;

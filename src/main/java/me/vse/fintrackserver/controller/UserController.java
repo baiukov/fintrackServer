@@ -1,10 +1,11 @@
 package me.vse.fintrackserver.controller;
 
 
+import com.fasterxml.jackson.core.ErrorReportConfiguration;
 import me.vse.fintrackserver.model.User;
-import me.vse.fintrackserver.model.dto.requests.UserAuthRequestDto;
-import me.vse.fintrackserver.model.dto.requests.UserPincodeRequestDto;
-import me.vse.fintrackserver.model.dto.responses.UserAuthResponseDto;
+import me.vse.fintrackserver.rest.requests.UserAuthRequest;
+import me.vse.fintrackserver.rest.requests.UserPincodeRequest;
+import me.vse.fintrackserver.rest.responses.UserAuthResponse;
 import me.vse.fintrackserver.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -26,7 +27,7 @@ public class UserController {
     private MessageSource messageSource;
 
     @PostMapping("/register")
-    private ResponseEntity<?> register(@RequestBody UserAuthRequestDto request) {
+    private ResponseEntity<?> register(@RequestBody UserAuthRequest request) {
         try {
             User user = userService.registerUser(
                     request.getEmail(),
@@ -34,7 +35,7 @@ public class UserController {
                     request.getPassword()
             );
 
-            return ResponseEntity.ok(UserAuthResponseDto.builder()
+            return ResponseEntity.ok(UserAuthResponse.builder()
                     .id(user.getId())
                     .email(user.getEmail())
                     .userName(user.getUserName())
@@ -47,7 +48,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    private ResponseEntity<?> login(@RequestBody UserAuthRequestDto request) {
+    private ResponseEntity<?> login(@RequestBody UserAuthRequest request) {
         try {
             User user = userService.login(
                     request.getEmail(),
@@ -55,7 +56,7 @@ public class UserController {
                     request.getPassword()
             );
 
-            return ResponseEntity.ok(UserAuthResponseDto.builder()
+            return ResponseEntity.ok(UserAuthResponse.builder()
                     .id(user.getId())
                     .email(user.getEmail())
                     .userName(user.getUserName())
@@ -68,7 +69,7 @@ public class UserController {
     }
 
     @PostMapping("/setPincode")
-    private ResponseEntity<?> setPincode(@RequestBody UserPincodeRequestDto request) {
+    private ResponseEntity<?> setPincode(@RequestBody UserPincodeRequest request) {
         try {
             userService.setPincode(
                     UUID.fromString(request.getId()),
@@ -82,7 +83,7 @@ public class UserController {
     }
 
     @PostMapping("/verifyPincode")
-    private ResponseEntity<?> verifyPincode(@RequestBody UserPincodeRequestDto request) {
+    private ResponseEntity<?> verifyPincode(@RequestBody UserPincodeRequest request) {
         try {
             return ResponseEntity.ok(userService.verifyPinCode(
                     UUID.fromString(request.getId()),
