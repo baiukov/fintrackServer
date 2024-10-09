@@ -15,5 +15,6 @@ public enum ErrorMessages {
     ACCOUNT_NAME_IS_BLANK,
     ACCOUNT_TYPE_IS_WRONG,
     WRONG_CURRENCY,
+    INCORRECT_ASSET
 
 }
