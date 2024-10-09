@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Currency;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,13 +76,16 @@ public class AccountService {
         return account;
     }
 
+    @Transactional
     public List<Account> retrieveAll(String userId) {
         return entityManager.find(User.class, userId).getAccountUserRights()
                 .stream()
+                .filter(Objects::nonNull)
                 .map(AccountUserRights::getAccount)
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public Account update(AccountDto accountDto) {
         Account record = entityManager.find(Account.class, accountDto.getId());
         accountMapper.updateAccountFromDto(accountDto, record);
