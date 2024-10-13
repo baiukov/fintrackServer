@@ -11,9 +11,8 @@ import me.vse.fintrackserver.model.Account;
 import me.vse.fintrackserver.model.AccountUserRights;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.AccountDto;
-import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import me.vse.fintrackserver.repositories.AccountRepository;
-import org.springframework.beans.BeanUtils;
+import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

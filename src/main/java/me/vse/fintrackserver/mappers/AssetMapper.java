@@ -8,5 +8,5 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface AssetMapper {
-    void updateAccountFromDto(AssetDto dto, @MappingTarget Asset entity);
+    void updateAssetFromDto(AssetDto dto, @MappingTarget Asset entity);
 }

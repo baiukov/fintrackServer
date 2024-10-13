@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @ToString
 public class AssetDto {
 
+    private String senderId;
     private String id;
     private String name;
     private String type;

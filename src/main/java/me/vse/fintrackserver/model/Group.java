@@ -4,55 +4,37 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "assets")
+@Table(name = "groups")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode
-public class Asset {
+public class Group {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", unique = true, updatable = false)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "account_id", referencedColumnName = "id")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "group")
     @ToString.Exclude
-    private Account account;
+    @JsonIgnore
+    private List<UserGroupRelation> groupUsersRelations;
 
-    @Column(name = "name")
+    @Column(name = "group_name")
     private String name;
 
-    @Column(name = "acquisition_price")
-    private Long acquisitionPrice;
-
-    @Column(name = "start_date")
-    private LocalDate startDate;
-
-    @Column(name = "end_date")
-    private LocalDate endDate;
-
-    @Column(name = "color")
-    private String color;
-
-    @Column(name = "icon")
-    private String icon;
-
-    @Column(name = "is_removed")
-    private boolean isRemoved;
-
-    @Column(name = "removed_at")
-    private LocalDateTime removedAt;
+    @Column(name = "group_code", unique = true)
+    private String code;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -61,5 +43,4 @@ public class Asset {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
 }

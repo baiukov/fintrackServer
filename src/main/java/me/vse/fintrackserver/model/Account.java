@@ -45,6 +45,11 @@ public class Account {
     @JsonIgnore
     private List<AccountUserRights> userRights;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "account")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<Asset> assets;
+
     @Column(name = "name")
     private String name;
 
