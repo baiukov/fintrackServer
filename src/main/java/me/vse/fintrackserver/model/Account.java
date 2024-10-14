@@ -19,20 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @ToString
-@NamedEntityGraph(
-        name = "account.plain",
-        attributeNodes = {
-                @NamedAttributeNode("id"),
-                @NamedAttributeNode("name"),
-                @NamedAttributeNode("type"),
-                @NamedAttributeNode("currency"),
-                @NamedAttributeNode("initialAmount"),
-                @NamedAttributeNode("interestRate"),
-                @NamedAttributeNode("goalAmount"),
-                @NamedAttributeNode("alreadyPaidAmount"),
-                @NamedAttributeNode("isRemoved")
-        }
-)
+@EqualsAndHashCode
 public class Account {
 
     @Id
@@ -49,6 +36,11 @@ public class Account {
     @ToString.Exclude
     @JsonIgnore
     private List<Asset> assets;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "account")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<Transaction> transactions;
 
     @Column(name = "name")
     private String name;

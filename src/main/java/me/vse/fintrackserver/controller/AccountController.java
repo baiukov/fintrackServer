@@ -9,12 +9,37 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequestMapping("/api/v1/account")
 public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @GetMapping("/getBalance")
+    public ResponseEntity<?> getBalance(@RequestParam String id,
+                                        @RequestParam(required = false) LocalDateTime fromDate,
+                                        @RequestParam(required = false) LocalDateTime endDate
+    ) {
+        return ResponseEntity.ok(accountService.getBalance(id, fromDate, endDate));
+    }
+
+    @GetMapping("/getIncome")
+    public ResponseEntity<?> getIncome(@RequestParam String id,
+                                        @RequestParam(required = false) LocalDateTime fromDate,
+                                        @RequestParam(required = false) LocalDateTime endDate
+    ) {
+        return ResponseEntity.ok(accountService.getIncome(id, fromDate, endDate));
+    }
+    @GetMapping("/getExpense")
+    public ResponseEntity<?> getExpense(@RequestParam String id,
+                                        @RequestParam(required = false) LocalDateTime fromDate,
+                                        @RequestParam(required = false) LocalDateTime endDate
+    ) {
+        return ResponseEntity.ok(accountService.getExpense(id, fromDate, endDate));
+    }
 
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody AccountAddRequest request) {
