@@ -2,6 +2,7 @@ package me.vse.fintrackserver.controller;
 
 import me.vse.fintrackserver.model.Group;
 import me.vse.fintrackserver.model.dto.GroupDto;
+import me.vse.fintrackserver.rest.requests.GroupRemoveUserRequest;
 import me.vse.fintrackserver.services.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,9 +26,9 @@ public class GroupController {
     }
 
     @PostMapping("/addUser")
-    public ResponseEntity<?> addUser(@RequestBody String groupId, String userId ) {
+    public ResponseEntity<?> addUser(@RequestBody GroupRemoveUserRequest request) {
         try {
-            groupService.addUser(groupId, userId);
+            groupService.addUser(request.getGroupId(), request.getUserId());
             return ResponseEntity.ok(HttpStatus.OK);
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());

@@ -9,12 +9,22 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequestMapping("/api/v1/account")
 public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @GetMapping("/getBalance")
+    public ResponseEntity<?> getBalance(@RequestParam String id,
+                                        @RequestParam LocalDateTime fromDate,
+                                        @RequestParam LocalDateTime endDate
+    ) {
+        return ResponseEntity.ok(accountService.getBalance(id, fromDate, endDate));
+    }
 
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody AccountAddRequest request) {
