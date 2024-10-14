@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,5 +77,44 @@ public class GroupService {
     private String generateGroupCode(String name) {
         String now = String.valueOf(Instant.now().toEpochMilli());
         return name.substring(name.length() - 2).toUpperCase() + now.substring(now.length() - 3);
+    }
+
+    @Transactional
+    public void removeUser(String groupId, String userId) {
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        Group group = entityManager.find(Group.class, groupId);
+        if (group == null) {
+            throw new IllegalArgumentException(ErrorMessages.GROUP_DOESNT_EXIST.name());
+        }
+
+        Optional<UserGroupRelation> relation = group.getGroupUsersRelations()
+                .stream()
+                .filter(r -> r.getUser().equals(user))
+                .findFirst();
+
+        if (relation.isEmpty()) return;
+
+        userGroupRelationRepository.delete(relation.get());
+    }
+
+    @Transactional
+    public void addUser(String groupId, String userId) {
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        Group group = entityManager.find(Group.class, groupId);
+        if (group == null) {
+            throw new IllegalArgumentException(ErrorMessages.GROUP_DOESNT_EXIST.name());
+        }
+
+        UserGroupRelation userGroupRelation = new UserGroupRelation(user, group);
+
+        entityManager.persist(userGroupRelation);
     }
 }

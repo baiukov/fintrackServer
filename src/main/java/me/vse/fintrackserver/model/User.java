@@ -19,11 +19,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @ToString
+@EqualsAndHashCode
 public class User {
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "me.vse.fintrackserver.utils.GroupCodeGenerator")
+    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GenericGenerator(name = "uuid", strategy = "me.vse.fintrackserver.utils.GroupCodeGenerator")
     @Column(name = "id", unique = true, nullable = false)
     private String id;
 

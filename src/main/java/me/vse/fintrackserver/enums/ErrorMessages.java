@@ -19,5 +19,6 @@ public enum ErrorMessages {
 
     USER_DOESNT_HAVE_RIGHTS,
     INCORRECT_GROUP_NAME,
+    GROUP_DOESNT_EXIST
 
 }
