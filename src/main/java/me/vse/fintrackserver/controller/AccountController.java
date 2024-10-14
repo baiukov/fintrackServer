@@ -20,10 +20,25 @@ public class AccountController {
 
     @GetMapping("/getBalance")
     public ResponseEntity<?> getBalance(@RequestParam String id,
-                                        @RequestParam LocalDateTime fromDate,
-                                        @RequestParam LocalDateTime endDate
+                                        @RequestParam(required = false) LocalDateTime fromDate,
+                                        @RequestParam(required = false) LocalDateTime endDate
     ) {
         return ResponseEntity.ok(accountService.getBalance(id, fromDate, endDate));
+    }
+
+    @GetMapping("/getIncome")
+    public ResponseEntity<?> getIncome(@RequestParam String id,
+                                        @RequestParam(required = false) LocalDateTime fromDate,
+                                        @RequestParam(required = false) LocalDateTime endDate
+    ) {
+        return ResponseEntity.ok(accountService.getIncome(id, fromDate, endDate));
+    }
+    @GetMapping("/getExpense")
+    public ResponseEntity<?> getExpense(@RequestParam String id,
+                                        @RequestParam(required = false) LocalDateTime fromDate,
+                                        @RequestParam(required = false) LocalDateTime endDate
+    ) {
+        return ResponseEntity.ok(accountService.getExpense(id, fromDate, endDate));
     }
 
     @PostMapping("/add")

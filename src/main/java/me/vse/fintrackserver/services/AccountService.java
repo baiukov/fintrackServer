@@ -103,7 +103,7 @@ public class AccountService {
     }
 
     @Transactional
-    public Long getIncomes(String id) {
+    public Long getIncome(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
 
         AtomicReference<Long> initialAmount = new AtomicReference<>(account.getInitialAmount());
@@ -112,16 +112,6 @@ public class AccountService {
             transaction.getAccount().equals(account) &&
                     (TransactionTypes.INCOME.equals(transaction.getType()) ||
                     TransactionTypes.REVENUE.equals(transaction.getType()));
-
-        Predicate<Transaction> isExpense = transaction ->
-            transaction.getAccount().equals(account) &&
-                    (TransactionTypes.EXPENSE.equals(transaction.getType()) ||
-                    TransactionTypes.COST.equals(transaction.getType()));
-
-        Predicate<Transaction> isOutGoingTransfer = transaction ->
-                transaction.getAccount().equals(account) &&
-                TransactionTypes.TRANSFER.equals(transaction.getType()) &&
-                (!transaction.getAccount().equals(transaction.getReceiver()));
 
         Predicate<Transaction> isUpComingTransfer = transaction ->
                 (!transaction.getAccount().equals(account)) &&
@@ -134,16 +124,56 @@ public class AccountService {
             }
         };
 
+        List<Transaction> transactions;
+        if (fromDate != null && endDate == null) {
+            transactions = transactionRepository.findAllByAccount(account, fromDate, LocalDateTime.now());
+        } else if (fromDate == null && endDate != null) {
+            transactions = transactionRepository.findAllByAccount(account, endDate);
+        } else {
+            transactions = transactionRepository.findAllByAccount(account);
+        }
+
+        transactions.stream()
+                .filter(Objects::nonNull)
+                .forEach(increaseConsumer);
+
+        return initialAmount.get();
+    }
+
+    @Transactional
+    public Long getExpense(String id, LocalDateTime fromDate, LocalDateTime endDate) {
+        Account account = checkAccount(id);
+
+        AtomicReference<Long> initialAmount = new AtomicReference<>(account.getInitialAmount());
+
+        Predicate<Transaction> isExpense = transaction ->
+                transaction.getAccount().equals(account) &&
+                        (TransactionTypes.EXPENSE.equals(transaction.getType()) ||
+                                TransactionTypes.COST.equals(transaction.getType()));
+
+        Predicate<Transaction> isOutGoingTransfer = transaction ->
+                transaction.getAccount().equals(account) &&
+                        TransactionTypes.TRANSFER.equals(transaction.getType()) &&
+                        (!transaction.getAccount().equals(transaction.getReceiver()));
+
         Consumer<Transaction> decreaseConsumer = transaction -> {
             if (isExpense.test(transaction) || isOutGoingTransfer.test(transaction)) {
                 initialAmount.updateAndGet(v -> v - transaction.getAmount());
             }
         };
 
-        transactionRepository.findAllByAccount(account)
-                .stream()
+        List<Transaction> transactions;
+        if (fromDate != null && endDate == null) {
+            transactions = transactionRepository.findAllByAccount(account, fromDate, LocalDateTime.now());
+        } else if (fromDate == null && endDate != null) {
+            transactions = transactionRepository.findAllByAccount(account, endDate);
+        } else {
+            transactions = transactionRepository.findAllByAccount(account);
+        }
+
+        transactions.stream()
                 .filter(Objects::nonNull)
-                .forEach(increaseConsumer.andThen(decreaseConsumer));
+                .forEach(decreaseConsumer);
 
         return initialAmount.get();
     }
