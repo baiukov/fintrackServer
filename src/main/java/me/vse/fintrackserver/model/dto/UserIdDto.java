@@ -1,4 +1,4 @@
-package me.vse.fintrackserver.rest.requests;
+package me.vse.fintrackserver.model.dto;
 
 
 import lombok.Getter;
@@ -8,6 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserId {
+public class UserIdDto {
     private String userId;
 }

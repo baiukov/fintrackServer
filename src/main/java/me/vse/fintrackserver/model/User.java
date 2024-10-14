@@ -19,11 +19,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @ToString
+@EqualsAndHashCode
 public class User {
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "me.vse.fintrackserver.utils.UUIDGenerator")
+    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GenericGenerator(name = "uuid", strategy = "me.vse.fintrackserver.utils.GroupCodeGenerator")
     @Column(name = "id", unique = true, nullable = false)
     private String id;
 
@@ -31,6 +32,11 @@ public class User {
     @ToString.Exclude
     @JsonIgnore
     private List<AccountUserRights> accountUserRights;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<UserGroupRelation> userGroupRelations;
 
     @Column(name = "email")
     private String email;
