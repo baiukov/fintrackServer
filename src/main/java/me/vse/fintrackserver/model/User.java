@@ -24,7 +24,6 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-//    @GenericGenerator(name = "uuid", strategy = "me.vse.fintrackserver.utils.GroupCodeGenerator")
     @Column(name = "id", unique = true, nullable = false)
     private String id;
 

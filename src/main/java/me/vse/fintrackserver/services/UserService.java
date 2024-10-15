@@ -4,7 +4,10 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import me.vse.fintrackserver.enums.ErrorMessages;
+import me.vse.fintrackserver.model.Group;
 import me.vse.fintrackserver.model.User;
+import me.vse.fintrackserver.model.UserGroupRelation;
+import me.vse.fintrackserver.model.dto.UserDto;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service

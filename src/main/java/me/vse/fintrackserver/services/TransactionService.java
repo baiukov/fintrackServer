@@ -11,9 +11,17 @@ import me.vse.fintrackserver.repositories.StandingOrderRepository;
 import me.vse.fintrackserver.repositories.TransactionRepository;
 import me.vse.fintrackserver.rest.requests.TransactionRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
@@ -29,6 +37,43 @@ public class TransactionService {
 
     @Autowired
     private StandingOrderMapper standingOrderMapper;
+
+    @Transactional
+    public List<Transaction> findAllByAccount(String id,
+                                              LocalDateTime fromDate,
+                                              LocalDateTime endDate,
+                                              int pageNumber
+    ) {
+        Account account = checkAccount(id, null);
+        int batchSize = 20;
+        Pageable pageable = PageRequest.of(pageNumber, batchSize);
+
+        if (fromDate == null && endDate != null) {
+            return transactionRepository.findAllPagesByAccount(account, endDate, pageable);
+        } else if (fromDate != null && endDate == null) {
+            return transactionRepository.findAllPagesByAccount(account, fromDate, LocalDateTime.now(), pageable);
+        } else {
+            return transactionRepository.findAllPagesByAccount(account, pageable);
+        }
+    }
+
+    @Transactional
+    public Map<Category, List<Transaction>> findAllByCategories(String accountId,
+                                                    LocalDateTime fromDate,
+                                                    LocalDateTime endDate,
+                                                    boolean isIncome
+    ) {
+        Account account = checkAccount(accountId, null);
+        List<Transaction> transactionSet = isIncome ? getIncomeTransactions(account, fromDate, endDate)
+                : getExpenseTransactions(account, fromDate, endDate);
+
+        return transactionSet.stream().collect(Collectors.groupingBy(transaction ->
+                Optional.ofNullable(transaction.getCategory())
+                        .orElse(Category.builder().name("Other")
+                        .build())
+                )
+        );
+    }
 
     @Transactional
     public Transaction create(TransactionRequest transactionRequest) {
@@ -220,5 +265,68 @@ public class TransactionService {
 
         standingOrder = standingOrder == null ? transaction.getStandingOrder() : standingOrder;
         standingOrderRepository.delete(standingOrder);
+    }
+
+    public List<Transaction> getIncomeTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
+        Predicate<Transaction> isExpense = transaction ->
+                transaction.getAccount().equals(account) &&
+                        (TransactionTypes.EXPENSE.equals(transaction.getType()) ||
+                                TransactionTypes.COST.equals(transaction.getType()));
+
+        Predicate<Transaction> isOutGoingTransfer = transaction ->
+                transaction.getAccount().equals(account) &&
+                        TransactionTypes.TRANSFER.equals(transaction.getType()) &&
+                        (!transaction.getAccount().equals(transaction.getReceiver()));
+
+        return getTransactionSet(account, fromDate, endDate)
+                .stream().filter(transaction -> isExpense.test(transaction)
+                        || isOutGoingTransfer.test(transaction))
+                .collect(Collectors.toList());
+    }
+
+    public List<Transaction> getExpenseTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
+        Predicate<Transaction> isIncome = transaction ->
+                transaction.getAccount().equals(account) &&
+                        (TransactionTypes.INCOME.equals(transaction.getType()) ||
+                                TransactionTypes.REVENUE.equals(transaction.getType()));
+
+        Predicate<Transaction> isUpComingTransfer = transaction ->
+                (!transaction.getAccount().equals(account)) &&
+                        TransactionTypes.TRANSFER.equals(transaction.getType()) &&
+                        account.equals(transaction.getReceiver());
+
+        return getTransactionSet(account, fromDate, endDate)
+                .stream()
+                .filter(transaction -> isIncome.test(transaction)
+                        || isUpComingTransfer.test(transaction))
+                .collect(Collectors.toList());
+    }
+
+    public List<Transaction> getRevenueTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
+        Predicate<Transaction> isRevenue = transaction ->
+                transaction.getAccount().equals(account) &&
+                        (TransactionTypes.REVENUE.equals(transaction.getType()));
+
+        return getTransactionSet(account, fromDate, endDate)
+                .stream().filter(isRevenue).collect(Collectors.toList());
+    }
+
+    public List<Transaction> getCostTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
+        Predicate<Transaction> isCost = transaction ->
+                transaction.getAccount().equals(account) &&
+                        (TransactionTypes.COST.equals(transaction.getType()));
+
+        return getTransactionSet(account, fromDate, endDate)
+                .stream().filter(isCost).collect(Collectors.toList());
+    }
+
+    private List<Transaction> getTransactionSet(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
+        if (fromDate != null && endDate == null) {
+            return transactionRepository.findAllByAccount(account, fromDate, LocalDateTime.now());
+        } else if (fromDate == null && endDate != null) {
+            return transactionRepository.findAllByAccount(account, endDate);
+        } else {
+            return transactionRepository.findAllByAccount(account);
+        }
     }
 }

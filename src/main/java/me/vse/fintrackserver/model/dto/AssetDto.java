@@ -16,8 +16,8 @@ public class AssetDto {
     private String name;
     private String type;
     private String accountId;
-    private Long acquisitionPrice = 0L;
-    private Long depreciationPrice = 0L;
+    private double acquisitionPrice;
+    private double depreciationPrice;
     private LocalDate startDateStr = LocalDate.now();
     private LocalDate endDateStr;
     private String color;

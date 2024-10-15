@@ -9,18 +9,17 @@ import me.vse.fintrackserver.model.AccountUserRights;
 import me.vse.fintrackserver.model.Asset;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.AssetDto;
-import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.repositories.AssetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
-
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
 
@@ -35,6 +34,18 @@ public class AssetService {
 
     @Autowired
     private AssetMapper assetMapper;
+
+    @Transactional
+    public List<Asset> getAll(String accountId) {
+        if (accountId == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        }
+        Account account = entityManager.find(Account.class, accountId);
+        if (account == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        }
+        return account.getAssets();
+    }
 
     @Transactional
     public Asset add(AssetDto assetDto) {
@@ -54,6 +65,7 @@ public class AssetService {
                 .name(assetDto.getName())
                 .color(assetDto.getColor())
                 .acquisitionPrice(assetDto.getAcquisitionPrice())
+                .depreciationPrice(assetDto.getDepreciationPrice())
                 .startDate(assetDto.getStartDateStr())
                 .endDate(assetDto.getEndDateStr())
                 .color(assetDto.getColor())
@@ -107,6 +119,25 @@ public class AssetService {
         if (asset.getEndDate() == null) {
             asset.setEndDate(LocalDate.now());
         }
+    }
+
+    public Double getCurrentAssetPrice(Asset asset) {
+        if (asset.isRemoved()) return 0.0;
+
+        double acquisitionPrice = asset.getAcquisitionPrice();
+        double depreciationPrice = asset.getDepreciationPrice();
+
+        double assetUsageFullPrice = acquisitionPrice - depreciationPrice;
+        LocalDateTime now = LocalDateTime.now();
+
+        boolean isAssetDepreciatedByDate = Duration.between(asset.getStartDate(), now).toDays() < 1;
+        if (isAssetDepreciatedByDate) return depreciationPrice;
+
+        long totalDaysOfUsage = Duration.between(asset.getStartDate(), asset.getEndDate()).toDays();
+        double pricePerDateOfUsage = assetUsageFullPrice / totalDaysOfUsage;
+
+        long daysInUse = Duration.between(asset.getStartDate(), now).toDays();
+        return acquisitionPrice - (pricePerDateOfUsage * daysInUse);
     }
 
 }

@@ -10,6 +10,7 @@ import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import me.vse.fintrackserver.model.dto.UserIdDto;
 import me.vse.fintrackserver.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,6 +53,7 @@ public class AccountController {
             @RequestParam(required = false) LocalDateTime fromDate,
             @Parameter(description = "Optional end date for the net worth calculation")
             @RequestParam(required = false) LocalDateTime endDate
+
     ) {
         return ResponseEntity.ok(accountService.getNetWorth(id, fromDate, endDate));
     }
