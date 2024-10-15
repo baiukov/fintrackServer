@@ -10,7 +10,6 @@ import me.vse.fintrackserver.model.UserGroupRelation;
 import me.vse.fintrackserver.model.dto.UserDto;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -29,18 +28,8 @@ public class UserService {
     private EntityManager entityManager;
 
     @Transactional
-    public List<UserDto> getAll(int pageSize, int pageNumber) {
-        return userRepository.findAllPageable(PageRequest.of(pageNumber, pageSize))
-                .stream()
-                .map(user -> UserDto.builder()
-                        .id(user.getId())
-                        .isBlocked(user.isBlocked())
-                        .isAdmin(user.isAdmin())
-                        .userName(user.getUserName())
-                        .email(user.getEmail())
-                        .build()
-                )
-                .collect(Collectors.toList());
+    public List<User> getAll(int pageSize, int pageNumber) {
+        return userRepository.findAllPageable(PageRequest.of(pageNumber, pageSize));
     }
 
     @Transactional
