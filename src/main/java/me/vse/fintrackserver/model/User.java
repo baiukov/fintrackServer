@@ -45,9 +45,11 @@ public class User {
     private String userName;
 
     @Column(name = "password")
+    @JsonIgnore
     private String password;
 
     @Column(name = "pincode")
+    @JsonIgnore
     private String pincode;
 
     @Column(name = "is_blocked")

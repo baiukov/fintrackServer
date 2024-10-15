@@ -7,9 +7,10 @@ import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -20,10 +21,12 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private MessageSource messageSource;
-
-    @Autowired
     private EntityManager entityManager;
+
+    @Transactional
+    public List<User> getAll(int pageSize, int pageNumber) {
+        return userRepository.findAllPageable(PageRequest.of(pageNumber, pageSize));
+    }
 
     @Transactional
     public User registerUser(String email, String userName, String password) {
