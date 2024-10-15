@@ -4,11 +4,16 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.mappers.CategoryMapper;
+import me.vse.fintrackserver.model.Account;
+import me.vse.fintrackserver.model.Asset;
 import me.vse.fintrackserver.model.Category;
+import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.CategoryDto;
 import me.vse.fintrackserver.repositories.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CategoryService {
@@ -21,6 +26,20 @@ public class CategoryService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Transactional
+    public List<Asset> getAll(String userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        }
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        }
+
+        // TODO User categories
+        return null;
+    }
 
     @Transactional
     public Category add(CategoryDto categoryDto) {

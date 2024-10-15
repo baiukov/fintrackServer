@@ -3,6 +3,7 @@ package me.vse.fintrackserver.services;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import me.vse.fintrackserver.enums.ErrorMessages;
+import me.vse.fintrackserver.model.Asset;
 import me.vse.fintrackserver.model.Group;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.UserGroupRelation;
@@ -34,6 +35,21 @@ public class GroupService {
 
     @Autowired
     private UserGroupRelationRepository userGroupRelationRepository;
+
+    @Transactional
+    public List<Group> getAll(String userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        }
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        }
+
+        return user.getUserGroupRelations().stream()
+                .map(UserGroupRelation::getGroup)
+                .collect(Collectors.toList());
+    }
 
     @Transactional
     public Group add(GroupDto groupDto) {

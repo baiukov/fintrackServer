@@ -4,13 +4,19 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import me.vse.fintrackserver.enums.ErrorMessages;
+import me.vse.fintrackserver.model.Group;
 import me.vse.fintrackserver.model.User;
+import me.vse.fintrackserver.model.UserGroupRelation;
+import me.vse.fintrackserver.model.dto.UserDto;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -20,10 +26,22 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private MessageSource messageSource;
-
-    @Autowired
     private EntityManager entityManager;
+
+    @Transactional
+    public List<UserDto> getAll(int pageSize, int pageNumber) {
+        return userRepository.findAllPageable(PageRequest.of(pageNumber, pageSize))
+                .stream()
+                .map(user -> UserDto.builder()
+                        .id(user.getId())
+                        .isBlocked(user.isBlocked())
+                        .isAdmin(user.isAdmin())
+                        .userName(user.getUserName())
+                        .email(user.getEmail())
+                        .build()
+                )
+                .collect(Collectors.toList());
+    }
 
     @Transactional
     public User registerUser(String email, String userName, String password) {

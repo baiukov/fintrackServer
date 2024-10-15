@@ -17,6 +17,15 @@ public class AssetController {
     @Autowired
     private AssetService assetService;
 
+    @GetMapping("/getAll")
+    public ResponseEntity<?> getAll(@RequestParam String accountId) {
+        try {
+            return ResponseEntity.ok(assetService.getAll(accountId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody AssetDto assetDto) {
         try {
