@@ -16,6 +16,15 @@ public class GroupController {
     @Autowired
     private GroupService groupService;
 
+    @GetMapping("/getAll")
+    public ResponseEntity<?> getAll(@RequestParam String userId) {
+        try {
+            return ResponseEntity.ok(groupService.getAll(userId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody GroupDto groupDto) {
         try {

@@ -34,7 +34,10 @@ public class Asset {
     private String name;
 
     @Column(name = "acquisition_price")
-    private Long acquisitionPrice;
+    private Double acquisitionPrice;
+
+    @Column(name = "depreciation_price")
+    private Double depreciationPrice;
 
     @Column(name = "start_date")
     private LocalDate startDate;

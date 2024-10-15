@@ -26,6 +26,12 @@ public class UserController {
     @Autowired
     private MessageSource messageSource;
 
+    @GetMapping("/getAll")
+    private ResponseEntity<?> getAll(@RequestParam(required = false,defaultValue = "100") int pageSize,
+                                     @RequestParam(required = false,defaultValue = "0") int pageNumber) {
+        return ResponseEntity.ok(userService.getAll(pageSize, pageNumber));
+    }
+
     @PostMapping("/register")
     private ResponseEntity<?> register(@RequestBody UserAuthRequest request) {
         try {

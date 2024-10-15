@@ -15,6 +15,15 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    @GetMapping("/getAll")
+    public ResponseEntity<?> getAll(@RequestParam String userId) {
+        try {
+            return ResponseEntity.ok(categoryService.getAll(userId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody CategoryDto categoryDto) {
         try {

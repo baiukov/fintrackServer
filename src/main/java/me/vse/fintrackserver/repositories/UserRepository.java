@@ -1,6 +1,7 @@
 package me.vse.fintrackserver.repositories;
 
 import me.vse.fintrackserver.model.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +24,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("select u from User u where lower(u.id) in (:ids)")
     List<User> findUsers(@Param("ids") List<String> ids);
+
+    @Query("select u from User u")
+    List<User> findAllPageable(Pageable pageable);
 }
