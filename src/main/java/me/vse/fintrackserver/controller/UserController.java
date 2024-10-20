@@ -101,7 +101,7 @@ public class UserController {
             @Parameter(description = "User ID and pincode to set", required = true) @RequestBody UserPincodeRequest request) {
         try {
             userService.setPincode(
-                    UUID.fromString(request.getId()),
+                    request.getId(),
                     request.getPincode()
             );
 

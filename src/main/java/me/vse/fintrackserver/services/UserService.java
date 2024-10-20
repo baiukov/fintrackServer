@@ -96,7 +96,7 @@ public class UserService {
         return user;
     }
 
-    public void setPincode(UUID id, String pincode) {
+    public void setPincode(String id, String pincode) {
         String only4DigitsRegex = "^\\d{4}$";
         if (!pincode.matches(only4DigitsRegex)) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_PINCODE.name());

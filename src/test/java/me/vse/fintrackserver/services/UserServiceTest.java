@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.util.AssertionErrors.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
@@ -29,9 +28,7 @@ public class UserServiceTest extends ATest {
 
     private EntityManager entityManager;
     private UserRepository userRepository;
-
     private UserService userService;
-
 
     @BeforeEach
     public void setUp() {
@@ -47,7 +44,6 @@ public class UserServiceTest extends ATest {
                 Arguments.of("strange@mail.e", "strangeUser", "strangePassword32")
         );
     }
-
 
     @ParameterizedTest(name = "given email: {0} username: {1}, password: {2}. Should return new user instance")
     @MethodSource("getRegisterUserScenarios")
@@ -74,8 +70,6 @@ public class UserServiceTest extends ATest {
                 Arguments.of("1234 5678Aa", ErrorMessages.PASSWORD_CONTAINS_WHITESPACES.name()),
                 Arguments.of("12345678Aa", null)
         );
-
-
     }
 
     @ParameterizedTest(name = "Test password validation. Given password: {0}. Should throw exeption message: {1}")
@@ -105,16 +99,118 @@ public class UserServiceTest extends ATest {
     public void userExistsCheckTest(boolean isEmailRegistered, boolean isUserNameRegistered,
                                     boolean shouldThrowException
     ) {
-      expect(userRepository.findByEmail(anyString())).andReturn(isEmailRegistered ? randomString(1) : null);
-      expect(userRepository.findByUserName(anyString())).andReturn(isUserNameRegistered ? randomString(1) : null);
-      replay(userRepository);
+        expect(userRepository.findByEmail(anyString())).andReturn(isEmailRegistered ? randomString(1) : null);
+        expect(userRepository.findByUserName(anyString())).andReturn(isUserNameRegistered ? randomString(1) : null);
+        replay(userRepository);
 
-      Executable call = () -> userService.registerUser("test@gmail.com", "random", "12345678Aa");
+        Executable call = () -> userService.registerUser("test@gmail.com", "random", "12345678Aa");
 
-      if (shouldThrowException) {
-          assertThrows(IllegalArgumentException.class, call);
-      } else {
-          assertDoesNotThrow(call);
-      }
+        if (shouldThrowException) {
+            assertThrows(IllegalArgumentException.class, call);
+        } else {
+            assertDoesNotThrow(call);
+        }
+    }
+
+    private Stream<Arguments> getLoginScenarios() {
+        return Stream.of(
+                Arguments.of(false, "12345678Aa", "12345678Aa", ErrorMessages.USER_DOESNT_EXIST.name()),
+                Arguments.of(false, "12345678Aa", "notCorrect", ErrorMessages.USER_DOESNT_EXIST.name()),
+                Arguments.of(true, "12345678Aa", "notCorrect", ErrorMessages.WRONG_PASSWORD.name()),
+                Arguments.of(true, "12345678Aa", "12345678Aa", null)
+        );
+    }
+
+    @ParameterizedTest(name = "Test login. Given is email or username registered: {0}, registered password {1}, " +
+            "given password: {2}. Should throw exception: {3}")
+    @MethodSource("getLoginScenarios")
+    public void loginTest(boolean isUserFound, String expectedPassword, String givenPassword, String exceptionMessage) {
+        String hashedPassword = BCrypt.withDefaults().hashToString(12, expectedPassword.toCharArray());
+        User user = User.builder().email("test@gmail.com").userName("user").password(hashedPassword).build();
+
+        expect(userRepository.findByUserNameOrEmail(anyString(), anyString())).andReturn(isUserFound ? user : null);
+        replay(userRepository);
+
+        if (exceptionMessage != null) {
+            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () ->
+                    userService.login("test@gmail.com", "user", givenPassword)
+            );
+            assertEquals(exceptionMessage, thrown.getMessage());
+        } else {
+            assertEquals(user, userService.login("test@gmail.com", "user", givenPassword));
+        }
+
+        verify(userRepository);
+    }
+
+    public Stream<Arguments> getSetPincodeTestScenarios() {
+        return Stream.of(
+                Arguments.of(null, "id", "1234", ErrorMessages.USER_DOESNT_EXIST.name()),
+                Arguments.of("id", "inCorrectId", "1234", ErrorMessages.USER_DOESNT_EXIST.name()),
+                Arguments.of("id", "id", "abcd", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of("id", "id", "123", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of("id", "id", "12345", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of("id", "id", "1234", null)
+        );
+    }
+
+    @ParameterizedTest(name = "Test set pincode. Given existing id: {0}, provided id: {1}, pincode: {2}. Should throw: {3}")
+    @MethodSource("getSetPincodeTestScenarios")
+    public void setPincodeTest(String existingId, String providedId, String pincode, String exceptionMessage) {
+        User user = providedId.equals(existingId) ? User.builder().id(existingId).build() : null;
+        expect(entityManager.find(User.class, providedId)).andReturn(user);
+        replay(entityManager);
+
+        if (exceptionMessage != null) {
+            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                    () -> userService.setPincode(providedId, pincode));
+            assertEquals(exceptionMessage, thrown.getMessage());
+        } else {
+            userService.setPincode(providedId, pincode);
+            assertNotNull(user);
+            assertTrue(BCrypt.verifyer().verify(pincode.toCharArray(), user.getPincode()).verified);
+        }
+    }
+
+    public Stream<Arguments> getVerifyPincodeTestScenarios() {
+        return Stream.of(
+                Arguments.of(null, "id", "1234", "5678", ErrorMessages.USER_DOESNT_EXIST.name()),
+                Arguments.of(null, "id", "1234", "123", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of(null, "id", "1234", "abcd", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of(null, "id", "1234", "1234", ErrorMessages.USER_DOESNT_EXIST.name()),
+
+                Arguments.of("id", "inCorrectId", "1234", "5678", ErrorMessages.USER_DOESNT_EXIST.name()),
+                Arguments.of("id", "inCorrectId", "1234", "123", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of("id", "inCorrectId", "1234", "abcd", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of("id", "inCorrectId", "1234", "1234", ErrorMessages.USER_DOESNT_EXIST.name()),
+
+                Arguments.of("id", "id", "123", "123", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of("id", "id", "abcd", "abcd", ErrorMessages.INCORRECT_PINCODE.name()),
+                Arguments.of("id", "id", "12345", "12345", ErrorMessages.INCORRECT_PINCODE.name()),
+
+                Arguments.of("id", "id", "1234", "1234", null)
+        );
+    }
+
+    @ParameterizedTest(name = "Test verify pincode. Given existing id: {0}, provided id: {1}, real pincode: {2}," +
+            " given pincode: {3}. Should throw: {4}")
+    @MethodSource("getVerifyPincodeTestScenarios")
+    public void verifyPincodeTest(String existingId, String providedId, String realPincode, String givenPincode,
+                                  String exceptionMessage
+    ) {
+        User user = providedId.equals(existingId) ? User.builder().id(existingId).build() : null;
+        boolean isPincodeCorrect = realPincode.equals(givenPincode);
+        expect(entityManager.find(User.class, providedId)).andReturn(user);
+        replay(entityManager);
+
+        if (exceptionMessage != null) {
+            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                    () -> userService.setPincode(providedId, givenPincode));
+            assertEquals(exceptionMessage, thrown.getMessage());
+        } else {
+            userService.setPincode(providedId, givenPincode);
+            assertNotNull(user);
+            assertEquals(isPincodeCorrect, BCrypt.verifyer().verify(realPincode.toCharArray(), user.getPincode()).verified);
+        }
     }
 }
