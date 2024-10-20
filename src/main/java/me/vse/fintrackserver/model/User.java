@@ -3,6 +3,7 @@ package me.vse.fintrackserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.commons.lang3.builder.EqualsExclude;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -45,6 +46,7 @@ public class User {
 
     @Column(name = "password")
     @JsonIgnore
+    @EqualsAndHashCode.Exclude
     private String password;
 
     @Column(name = "pincode")
