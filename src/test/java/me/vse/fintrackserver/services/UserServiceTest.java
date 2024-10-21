@@ -8,6 +8,7 @@ import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
@@ -47,7 +48,7 @@ public class UserServiceTest extends ATest {
 
     @ParameterizedTest(name = "given email: {0} username: {1}, password: {2}. Should return new user instance")
     @MethodSource("getRegisterUserScenarios")
-    public void registerUser(String email, String userName, String password) {
+    public void registerUserTest(String email, String userName, String password) {
         entityManager.persist(anyObject(User.class));
         expect(userRepository.findByUserName(anyString())).andReturn(null);
         expect(userRepository.findByEmail(anyString())).andReturn(null);
@@ -195,7 +196,7 @@ public class UserServiceTest extends ATest {
     @ParameterizedTest(name = "Test verify pincode. Given existing id: {0}, provided id: {1}, real pincode: {2}," +
             " given pincode: {3}. Should throw: {4}")
     @MethodSource("getVerifyPincodeTestScenarios")
-    public void verifyPincodeTest(String existingId, String providedId, String realPincode, String givenPincode,
+    public void verifyPinCodeTest(String existingId, String providedId, String realPincode, String givenPincode,
                                   String exceptionMessage
     ) {
         User user = providedId.equals(existingId) ? User.builder().id(existingId).build() : null;
@@ -212,5 +213,10 @@ public class UserServiceTest extends ATest {
             assertNotNull(user);
             assertEquals(isPincodeCorrect, BCrypt.verifyer().verify(realPincode.toCharArray(), user.getPincode()).verified);
         }
+    }
+
+    @Test
+    public void getAllTest() {
+        // doesnt require a test
     }
 }

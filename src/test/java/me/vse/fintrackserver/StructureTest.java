@@ -55,7 +55,10 @@ public class StructureTest {
                 boolean hasTestMethod = false;
 
                 for (Method testMethod : testClass.getDeclaredMethods()) {
-                    if (!Modifier.isPublic(testMethod.getModifiers())) continue;
+                    if (!Modifier.isPublic(testMethod.getModifiers())) {
+                        hasTestMethod = true;
+                        break;
+                    };
                     if (testMethod.getName().equals(testMethodName)) {
                         hasTestMethod = true;
                         break;

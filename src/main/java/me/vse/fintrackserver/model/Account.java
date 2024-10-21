@@ -52,7 +52,7 @@ public class Account {
     private Currency currency;
 
     @Column(name = "initial_amount")
-    private Double initialAmount;
+    private double initialAmount;
 
     @Column(name = "interest_rate")
     private double interestRate;

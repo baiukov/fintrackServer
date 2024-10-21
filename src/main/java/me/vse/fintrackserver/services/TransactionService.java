@@ -150,7 +150,7 @@ public class TransactionService {
         return account;
     }
 
-    private Long checkAmount(Long amount, Long previousValue) {
+    private double checkAmount(Double amount, Double previousValue) {
         if (amount == null && previousValue == null) {
             throw new IllegalArgumentException(ErrorMessages.AMOUNT_LESS_THAN_0.name());
         }
@@ -267,7 +267,7 @@ public class TransactionService {
         standingOrderRepository.delete(standingOrder);
     }
 
-    public List<Transaction> getIncomeTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
+    public List<Transaction> getExpenseTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
         Predicate<Transaction> isExpense = transaction ->
                 transaction.getAccount().equals(account) &&
                         (TransactionTypes.EXPENSE.equals(transaction.getType()) ||
@@ -284,7 +284,7 @@ public class TransactionService {
                 .collect(Collectors.toList());
     }
 
-    public List<Transaction> getExpenseTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
+    public List<Transaction> getIncomeTransactions(Account account, LocalDateTime fromDate, LocalDateTime endDate) {
         Predicate<Transaction> isIncome = transaction ->
                 transaction.getAccount().equals(account) &&
                         (TransactionTypes.INCOME.equals(transaction.getType()) ||
