@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @ToString
 public class AssetDto {
 
@@ -16,8 +17,8 @@ public class AssetDto {
     private String name;
     private String type;
     private String accountId;
-    private double acquisitionPrice;
-    private double depreciationPrice;
+    private Double acquisitionPrice;
+    private Double depreciationPrice;
     private LocalDate startDateStr = LocalDate.now();
     private LocalDate endDateStr;
     private String color;

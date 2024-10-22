@@ -2,6 +2,8 @@ package me.vse.fintrackserver.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.Setter;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.mappers.AssetMapper;
 import me.vse.fintrackserver.model.Account;
@@ -21,9 +23,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.function.Predicate.not;
 
 @Service
+@AllArgsConstructor
 public class AssetService {
 
     @Autowired
@@ -68,7 +72,6 @@ public class AssetService {
                 .depreciationPrice(assetDto.getDepreciationPrice())
                 .startDate(assetDto.getStartDateStr())
                 .endDate(assetDto.getEndDateStr())
-                .color(assetDto.getColor())
                 .icon(assetDto.getIcon())
                 .build();
 
@@ -119,6 +122,7 @@ public class AssetService {
         if (asset.getEndDate() == null) {
             asset.setEndDate(LocalDate.now());
         }
+        assetRepository.save(asset);
     }
 
     public Double getCurrentAssetPrice(Asset asset) {
@@ -128,16 +132,16 @@ public class AssetService {
         double depreciationPrice = asset.getDepreciationPrice();
 
         double assetUsageFullPrice = acquisitionPrice - depreciationPrice;
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
-        boolean isAssetDepreciatedByDate = Duration.between(asset.getStartDate(), now).toDays() < 1;
+        boolean isAssetDepreciatedByDate = Duration.ofDays(DAYS.between(now, asset.getEndDate())).toDays() < 1;
         if (isAssetDepreciatedByDate) return depreciationPrice;
 
-        long totalDaysOfUsage = Duration.between(asset.getStartDate(), asset.getEndDate()).toDays();
+        long totalDaysOfUsage = Duration.ofDays(DAYS.between(asset.getStartDate(), asset.getEndDate())).toDays();
         double pricePerDateOfUsage = assetUsageFullPrice / totalDaysOfUsage;
 
-        long daysInUse = Duration.between(asset.getStartDate(), now).toDays();
-        return acquisitionPrice - (pricePerDateOfUsage * daysInUse);
+        long daysBetweenStartAndNow = Duration.ofDays(DAYS.between(asset.getStartDate(), now)).toDays();
+        return acquisitionPrice - (pricePerDateOfUsage * daysBetweenStartAndNow);
     }
 
 }
