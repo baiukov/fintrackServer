@@ -3,6 +3,8 @@ package me.vse.fintrackserver.services;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import me.vse.fintrackserver.controller.AssetController;
 import me.vse.fintrackserver.enums.AccountType;
 import me.vse.fintrackserver.enums.ErrorMessages;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
 import static java.util.function.Predicate.not;
 
 @Service
+@AllArgsConstructor
+@Builder
 public class AccountService {
 
     @Autowired
@@ -79,7 +83,7 @@ public class AccountService {
 
     @Transactional
     public Double getBalance(String id, LocalDateTime fromDate, LocalDateTime endDate) {
-        return getIncome(id, fromDate, endDate) - getExpense(id, fromDate, endDate);
+        return getIncome(id, fromDate, endDate) + getExpense(id, fromDate, endDate);
     }
 
     @Transactional

@@ -20,7 +20,7 @@ public class TransactionRequest {
     private String receiverId;
     private String categoryId;
     private TransactionTypes type;
-    private Long amount;
+    private double amount;
     private LocalDateTime executionDateTime;
     private String note;
     private Double lat;

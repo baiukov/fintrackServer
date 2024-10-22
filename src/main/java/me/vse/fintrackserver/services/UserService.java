@@ -3,6 +3,7 @@ package me.vse.fintrackserver.services;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.model.Group;
 import me.vse.fintrackserver.model.User;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 
 @Service
+@AllArgsConstructor
 public class UserService {
 
     @Autowired
@@ -94,7 +96,7 @@ public class UserService {
         return user;
     }
 
-    public void setPincode(UUID id, String pincode) {
+    public void setPincode(String id, String pincode) {
         String only4DigitsRegex = "^\\d{4}$";
         if (!pincode.matches(only4DigitsRegex)) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_PINCODE.name());

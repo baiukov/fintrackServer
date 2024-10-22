@@ -37,12 +37,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getAll(pageSize, pageNumber));
     }
 
-    @GetMapping("/getAll")
-    private ResponseEntity<?> getAll(@RequestParam(required = false,defaultValue = "100") int pageSize,
-                                     @RequestParam(required = false,defaultValue = "0") int pageNumber) {
-        return ResponseEntity.ok(userService.getAll(pageSize, pageNumber));
-    }
-
     @PostMapping("/register")
     @Operation(summary = "Register User", description = "Register a new user with provided details.")
     @ApiResponses(value = {
@@ -107,7 +101,7 @@ public class UserController {
             @Parameter(description = "User ID and pincode to set", required = true) @RequestBody UserPincodeRequest request) {
         try {
             userService.setPincode(
-                    UUID.fromString(request.getId()),
+                    request.getId(),
                     request.getPincode()
             );
 
