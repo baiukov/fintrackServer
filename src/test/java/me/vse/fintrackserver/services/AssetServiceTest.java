@@ -9,6 +9,7 @@ import me.vse.fintrackserver.model.Asset;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.AssetDto;
 import me.vse.fintrackserver.repositories.AssetRepository;
+import org.apache.logging.log4j.util.Strings;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
@@ -382,4 +383,50 @@ public class AssetServiceTest {
         assertEquals(expected, assetService.getCurrentAssetPrice(asset));
     }
 
+    private Stream<Arguments> getAllAssetsScenarios() {
+        return Stream.of(
+                Arguments.of(new Account(), ErrorMessages.ACCOUNT_DOESNT_EXIST),
+                Arguments.of(Account.builder().id("").build(), ErrorMessages.ACCOUNT_DOESNT_EXIST),
+                Arguments.of(Account.builder()
+                        .id("accId")
+                        .assets(List.of(
+                                Asset.builder().id("asset1").build()
+                        ))
+                        .build(),
+                        null),
+                Arguments.of(Account.builder()
+                        .id("accId")
+                        .assets(List.of(
+                                Asset.builder().id("asset1").name(randomString(10)).build(),
+                                Asset.builder().id("asset2").name(randomString(10)).build(),
+                                Asset.builder().id("asset3").name(randomString(10)).build()
+                        ))
+                        .build(),
+                        null),
+                Arguments.of(Account.builder()
+                        .id("accId")
+                        .assets(List.of())
+                        .build(),
+                        null)
+        );
+    }
+
+    @ParameterizedTest(name = "Test get all assets. Given account: {0}. " +
+            "Should return all assets or throw exception message {1}")
+    @MethodSource("getAllAssetsScenarios")
+    public void getAllTest(Account account, ErrorMessages message) {
+        String id = account.getId();
+        List<Asset> assets = account.getAssets();
+
+        expect(entityManager.find(Account.class, id)).andReturn(Strings.isBlank(id) ? null : account);
+        replay(entityManager);
+
+        if (message != null) {
+            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                    () -> assetService.getAll(id));
+            assertEquals(message.name(), thrown.getMessage());
+        } else {
+            assertEquals(assets, assetService.getAll(id));
+        }
+    }
 }
