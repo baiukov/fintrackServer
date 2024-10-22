@@ -2,12 +2,9 @@ package me.vse.fintrackserver.services;
 
 import jakarta.persistence.EntityManager;
 import me.vse.fintrackserver.enums.ErrorMessages;
-import me.vse.fintrackserver.mappers.AssetMapper;
 import me.vse.fintrackserver.mappers.CategoryMapper;
-import me.vse.fintrackserver.model.*;
-import me.vse.fintrackserver.model.dto.AssetDto;
+import me.vse.fintrackserver.model.Category;
 import me.vse.fintrackserver.model.dto.CategoryDto;
-import me.vse.fintrackserver.repositories.AssetRepository;
 import me.vse.fintrackserver.repositories.CategoryRepository;
 import org.apache.logging.log4j.util.Strings;
 import org.easymock.EasyMock;
@@ -21,13 +18,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.naming.AuthenticationException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.stream.Stream;
 
-import static me.vse.fintrackserver.ATest.randomString;
 import static org.easymock.EasyMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
