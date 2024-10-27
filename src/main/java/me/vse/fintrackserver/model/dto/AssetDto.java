@@ -19,8 +19,8 @@ public class AssetDto {
     private String accountId;
     private Double acquisitionPrice;
     private Double depreciationPrice;
-    private LocalDate startDateStr = LocalDate.now();
-    private LocalDate endDateStr;
+    private LocalDate startDate = LocalDate.now();
+    private LocalDate endDate;
     private String color;
     private String icon;
     private boolean isRemoved;

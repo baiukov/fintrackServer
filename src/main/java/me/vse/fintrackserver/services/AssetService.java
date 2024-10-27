@@ -71,8 +71,8 @@ public class AssetService {
                 .color(assetDto.getColor())
                 .acquisitionPrice(assetDto.getAcquisitionPrice())
                 .depreciationPrice(assetDto.getDepreciationPrice())
-                .startDate(assetDto.getStartDateStr())
-                .endDate(assetDto.getEndDateStr())
+                .startDate(assetDto.getStartDate())
+                .endDate(assetDto.getEndDate())
                 .icon(assetDto.getIcon())
                 .build();
 
@@ -105,6 +105,7 @@ public class AssetService {
         if (!doesUserHaveRights) {
             throw new AuthenticationException(ErrorMessages.USER_DOESNT_HAVE_RIGHTS.name());
         }
+
 
         assetMapper.updateAssetFromDto(assetDto, asset);
         assetRepository.save(asset);

@@ -87,8 +87,8 @@ public class AssetServiceTest {
         AssetDto assetDto = AssetDto.builder()
                 .accountId(asset.getAccount() == null ? null : asset.getAccount().getId())
                 .name(asset.getName())
-                .endDateStr(asset.getEndDate())
-                .startDateStr(asset.getStartDate())
+                .endDate(asset.getEndDate())
+                .startDate(asset.getStartDate())
                 .acquisitionPrice(asset.getAcquisitionPrice())
                 .depreciationPrice(asset.getDepreciationPrice())
                 .color(asset.getColor())
@@ -255,8 +255,8 @@ public class AssetServiceTest {
                 .depreciationPrice(expected.getDepreciationPrice())
                 .icon(expected.getIcon())
                 .color(expected.getColor())
-                .startDateStr(expected.getStartDate())
-                .endDateStr(expected.getEndDate())
+                .startDate(expected.getStartDate())
+                .endDate(expected.getEndDate())
                 .name(expected.getName())
                 .build();
 
