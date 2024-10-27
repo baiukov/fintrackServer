@@ -1,8 +1,6 @@
 package me.vse.fintrackserver.rest.requests;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import me.vse.fintrackserver.enums.Frequencies;
 import me.vse.fintrackserver.enums.TransactionTypes;
 
@@ -11,6 +9,9 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@ToString
 public class TransactionRequest {
 
 
@@ -20,7 +21,7 @@ public class TransactionRequest {
     private String receiverId;
     private String categoryId;
     private TransactionTypes type;
-    private double amount;
+    private Double amount;
     private LocalDateTime executionDateTime;
     private String note;
     private Double lat;
