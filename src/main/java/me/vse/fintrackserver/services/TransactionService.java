@@ -2,6 +2,7 @@ package me.vse.fintrackserver.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.enums.Frequencies;
 import me.vse.fintrackserver.enums.TransactionTypes;
@@ -18,12 +19,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class TransactionService {
 
     @Autowired
@@ -69,8 +70,7 @@ public class TransactionService {
 
         return transactionSet.stream().collect(Collectors.groupingBy(transaction ->
                 Optional.ofNullable(transaction.getCategory())
-                        .orElse(Category.builder().name("Other")
-                        .build())
+                        .orElse(Category.builder().name("Other").build())
                 )
         );
     }
@@ -100,6 +100,7 @@ public class TransactionService {
         }
 
         performChecks(transactionRequest, transaction);
+        transactionRepository.save(transaction);
         return transaction;
     }
 
@@ -139,7 +140,7 @@ public class TransactionService {
     }
 
     private Account checkAccount(String id, Account previousValue) {
-        if (previousValue != null) return previousValue;
+        if (id == null && previousValue != null) return previousValue;
         if (id == null) {
             throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
@@ -221,7 +222,7 @@ public class TransactionService {
     @Transactional
     public void addStandingOrder(Transaction sample, TransactionRequest transactionRequest) {
         Frequencies frequency = transactionRequest.getFrequency();
-        if (frequency == null) return;
+        if (frequency == null || sample == null) return;
         StandingOrder standingOrder = StandingOrder.builder()
                 .transactionSample(sample)
                 .frequency(frequency)
@@ -279,7 +280,8 @@ public class TransactionService {
                         (!transaction.getAccount().equals(transaction.getReceiver()));
 
         return getTransactionSet(account, fromDate, endDate)
-                .stream().filter(transaction -> isExpense.test(transaction)
+                .stream()
+                .filter(transaction -> isExpense.test(transaction)
                         || isOutGoingTransfer.test(transaction))
                 .collect(Collectors.toList());
     }
