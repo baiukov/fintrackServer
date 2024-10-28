@@ -2008,7 +2008,7 @@ public class TransactionServiceTest {
     @ParameterizedTest(name = "Test find all transactions by account id. Given account: {0}. " +
             "Should throw an exception: {1} or return a list of transactions")
     @MethodSource("getFindAllByAccountScenarios")
-    public void getFindAllByAccountTest(Account account, ErrorMessages exception) {
+    public void findAllByAccountTest(Account account, ErrorMessages exception) {
         expect(entityManager.find(Account.class, account.getId()))
                 .andReturn(Strings.isBlank(account.getId()) ? null : account);
         Pageable pageable = PageRequest.of(1, 20);

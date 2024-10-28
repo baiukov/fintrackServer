@@ -82,50 +82,54 @@ public class Transaction {
 
         Transaction that = (Transaction) o;
 
-        if (!Objects.equals(that.id, id)) return false;
-        if (!Objects.equals(that.account, account)) return false;
+        if (Double.compare(that.amount, amount) != 0) return false;
+        if (isRemoved != that.isRemoved) return false;
+        if (!Objects.equals(id, that.id)) return false;
+        if (!Objects.equals(account, that.account)) return false;
         if (!Objects.equals(forAsset, that.forAsset)) return false;
         if (!Objects.equals(receiver, that.receiver)) return false;
         if (!Objects.equals(category, that.category)) return false;
         if (!Objects.equals(standingOrder, that.standingOrder)) return false;
         if (type != that.type) return false;
-        if (Double.compare(that.amount, amount) != 0) return false;
-        if (isRemoved != that.isRemoved) return false;
         if (!Objects.equals(lat, that.lat)) return false;
         if (!Objects.equals(lon, that.lon)) return false;
         if (!Objects.equals(photo, that.photo)) return false;
-        if (!Objects.equals(createdAt, that.createdAt)) return false;
-        if (!Objects.equals(updatedAt, that.updatedAt)) return false;
 
-        if (executionDateTime != null && that.executionDateTime != null) {
-            LocalDateTime thisExecutionWithoutSeconds = this.executionDateTime.withSecond(0).withNano(0);
-            LocalDateTime thatExecutionWithoutSeconds = that.executionDateTime.withSecond(0).withNano(0);
-            return thisExecutionWithoutSeconds.equals(thatExecutionWithoutSeconds);
-        } else return executionDateTime == null && that.executionDateTime == null;
+        LocalDateTime thisCreatedAtTruncated = createdAt != null ? createdAt.withSecond(0).withNano(0) : null;
+        LocalDateTime thatCreatedAtTruncated = that.createdAt != null ? that.createdAt.withSecond(0).withNano(0) : null;
+        if (!Objects.equals(thisCreatedAtTruncated, thatCreatedAtTruncated)) return false;
+
+        LocalDateTime thisUpdatedAtTruncated = updatedAt != null ? updatedAt.withSecond(0).withNano(0) : null;
+        LocalDateTime thatUpdatedAtTruncated = that.updatedAt != null ? that.updatedAt.withSecond(0).withNano(0) : null;
+        if (!Objects.equals(thisUpdatedAtTruncated, thatUpdatedAtTruncated)) return false;
+
+        LocalDateTime thisExecutionTruncated = executionDateTime != null ? executionDateTime.withSecond(0).withNano(0) : null;
+        LocalDateTime thatExecutionTruncated = that.executionDateTime != null ? that.executionDateTime.withSecond(0).withNano(0) : null;
+        return Objects.equals(thisExecutionTruncated, thatExecutionTruncated);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = id.hashCode();
-        result = prime * result + account.hashCode();
+        int result = id != null ? id.hashCode() : 0;
+        result = prime * result + (account != null ? account.hashCode() : 0);
         result = prime * result + (forAsset != null ? forAsset.hashCode() : 0);
         result = prime * result + (receiver != null ? receiver.hashCode() : 0);
         result = prime * result + (category != null ? category.hashCode() : 0);
         result = prime * result + (standingOrder != null ? standingOrder.hashCode() : 0);
-        result = prime * result + type.hashCode();
+        result = prime * result + (type != null ? type.hashCode() : 0);
         long temp = Double.doubleToLongBits(amount);
         result = prime * result + (int) (temp ^ (temp >>> 32));
         result = prime * result + (lat != null ? lat.hashCode() : 0);
         result = prime * result + (lon != null ? lon.hashCode() : 0);
         result = prime * result + (photo != null ? photo.hashCode() : 0);
         result = prime * result + (isRemoved ? 1 : 0);
-        result = prime * result + (createdAt != null ? createdAt.hashCode() : 0);
-        result = prime * result + (updatedAt != null ? updatedAt.hashCode() : 0);
 
-        result = prime * result + (executionDateTime != null ?
-                executionDateTime.withSecond(0).withNano(0).hashCode() : 0);
+        result = prime * result + (createdAt != null ? createdAt.withSecond(0).withNano(0).hashCode() : 0);
+        result = prime * result + (updatedAt != null ? updatedAt.withSecond(0).withNano(0).hashCode() : 0);
+        result = prime * result + (executionDateTime != null ? executionDateTime.withSecond(0).withNano(0).hashCode() : 0);
 
         return result;
     }
+
 }
