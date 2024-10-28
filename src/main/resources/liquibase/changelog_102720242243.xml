@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="27102024" author="Aleksei Baiukov">
+        <sql>
+            CREATE USER test_schema IDENTIFIED BY testScemaPassword543;
+            GRANT CONNECT, RESOURCE TO test_schema;
+            GRANT CREATE SESSION TO test_schema;
+            GRANT CREATE TABLE TO test_schema;
+            GRANT CREATE SEQUENCE TO test_schema;
+            GRANT CREATE VIEW TO test_schema;
+            GRANT CREATE PROCEDURE TO test_schema;
+            GRANT UNLIMITED TABLESPACE TO test_schema;
+
+
+            create table test_schema.Account
+            (
+                id                  VARCHAR2(127) not null,
+                user_id             VARCHAR2(127) not null,
+                name                CHAR(1023)                        not null,
+                type                VARCHAR2(31) not null,
+                currency            VARCHAR2(3) default 'CZK' not null,
+                initial_amount      NUMBER(8,2) default 0 not null,
+                interest_rate       INTEGER default 0,
+                goal_amount         NUMBER(8,2) default 0,
+                already_paid_amount NUMBER(8,2) default 0,
+                is_removed          NUMBER(1) default 0 not null,
+                removed_at          DATE,
+                created_at          DATE    default CURRENT_TIMESTAMP not null,
+                updated_at          DATE    default CURRENT_TIMESTAMP not null,
+                constraint PK_ACCOUNT primary key (id)
+            );
+
+            create table Users
+            (
+                id         VARCHAR2(127) not null,
+                email      VARCHAR2(127) not null,
+                username   VARCHAR2(255) not null,
+                password   VARCHAR2(127) not null,
+                pincode    VARCHAR2(127),
+                is_blocked NUMBER(1) default 0 not null,
+                is_admin   NUMBER(1) default 0 not null,
+                created_at DATE default CURRENT_TIMESTAMP not null,
+                updated_at DATE default CURRENT_TIMESTAMP not null,
+                constraint PK_USERS primary key (id)
+            );
+
+            create table Account_user_rights
+            (
+                user_id    VARCHAR2(127) not null,
+                account_id VARCHAR2(127) not null,
+                is_owner   NUMBER(1),
+                rights     VARCHAR2(64),
+                created_at DATE,
+                updated_at DATE,
+                constraint PK_ACCOUNT_USER_RIGHTS primary key (user_id, account_id),
+                constraint FK_ACCOUNT__ACCOUNT_B_USERS foreign key (user_id)
+                    references Users (id),
+                constraint FK_ACCOUNT__USER_HAS__ACCOUNT foreign key (account_id)
+                    references Account (id)
+            );
+
+            create index account_belong_to_group_FK on Account_user_rights (
+                                                                            user_id ASC
+                );
+
+            create index group_has_account_FK on Account_user_rights (
+                                                                      account_id ASC
+                );
+
+            create table Assets
+            (
+                id                VARCHAR2(127) not null,
+                account_id        VARCHAR2(127) not null,
+                name              VARCHAR2(255) not null,
+                acquisition_price NUMBER(8,2) not null,
+                start_date        DATE default CURRENT_TIMESTAMP not null,
+                end_date          DATE,
+                color             VARCHAR2(31),
+                icon              VARCHAR2(127),
+                is_removed        NUMBER(1) default 0,
+                removed_at        DATE,
+                created_at        DATE default CURRENT_TIMESTAMP not null,
+                updated_at        DATE default CURRENT_TIMESTAMP not null,
+                constraint PK_ASSETS primary key (id),
+                constraint FK_ASSETS_HAS_ASSET_ACCOUNT foreign key (account_id)
+                    references Account (id)
+            );
+
+            create index has_assets_FK on Assets (
+                                                  account_id ASC
+                );
+
+            create table Categories
+            (
+                id         VARCHAR2(127) not null,
+                icon       VARCHAR2(255),
+                name       VARCHAR2(63) not null,
+                color      VARCHAR2(31),
+                created_at DATE,
+                updated_at DATE,
+                constraint PK_CATEGORIES primary key (id)
+            );
+
+            create table Groups
+            (
+                id         VARCHAR2(127) not null,
+                group_name VARCHAR2(1023) not null,
+                group_code VARCHAR2(16),
+                created_at DATE not null,
+                updated_at DATE not null,
+                constraint PK_GROUPS primary key (id)
+            );
+
+            create table Transaction
+            (
+                id             VARCHAR2(127) not null,
+                account_id     VARCHAR2(127) not null,
+                for_asset_id   VARCHAR2(127),
+                receiver_id    VARCHAR2(127),
+                type           VARCHAR2(31) not null,
+                amount         NUMBER(8,2) not null,
+                execution_date DATE,
+                note           VARCHAR2(2047),
+                place_lat      FLOAT,
+                place_lon      FLOAT,
+                photo          VARCHAR2(511),
+                is_removed     NUMBER(1) default 0 not null,
+                removed_at     DATE,
+                created_at     DATE not null,
+                constraint PK_TRANSACTION primary key (id),
+                constraint FK_TRANSACT_HAS_TRANS_ACCOUNT foreign key (account_id)
+                    references Account (id),
+                constraint FK_TRANSACT_RELATED_T_ASSETS foreign key (for_asset_id)
+                    references Assets (id)
+            );
+
+            create table Standing_orders
+            (
+                id                    VARCHAR2(127) not null,
+                frequency             VARCHAR2(63) not null,
+                transaction_sample_id VARCHAR2(127) not null,
+                last_repeated_at      DATE default CURRENT_TIMESTAMP not null,
+                remind_days_before    INTEGER,
+                created_at            DATE                           not null,
+                updated_at            DATE                           not null,
+                constraint PK_STANDING_ORDERS primary key (id),
+                constraint FK_STANDING_IS_REPEAT_TRANSACT foreign key (id)
+                    references Transaction (id)
+            );
+
+            create index has_transactions_FK on Transaction (
+                                                             account_id ASC
+                );
+
+            create index related_transactions_FK on Transaction (
+                                                                 for_asset_id ASC
+                );
+
+            create table transactions_categories
+            (
+                transaction_id VARCHAR2(127) not null,
+                category_id    VARCHAR2(127) not null,
+                constraint PK_TRANSACTIONS_CATEGORIES primary key (transaction_id, category_id),
+                constraint FK_TRANSACT_CATEGORIE_TRANSACT foreign key (transaction_id)
+                    references Transaction (id),
+                constraint FK_TRANSACT_TRANSACTI_CATEGORI foreign key (category_id)
+                    references Categories (id)
+            );
+
+            create index tags_to_transaction_details_FK on transactions_categories (
+                                                                                    transaction_id ASC
+                );
+
+            create index transaction_details_to_tags_FK on transactions_categories (
+                                                                                    category_id ASC
+                );
+
+            create table user_group_relation
+            (
+                user_id  VARCHAR2(127) not null,
+                group_id VARCHAR2(127) not null,
+                constraint PK_USER_GROUP_RELATION primary key (user_id, group_id),
+                constraint FK_USER_ACC_USER_BELO_GROUPS foreign key (group_id)
+                    references Groups (id),
+                constraint FK_USER_ACC_GROUP_HAS_USERS foreign key (user_id)
+                    references Users (id)
+            );
+
+            create index user_belong_to_group_FK on user_group_relation (
+                                                                         group_id ASC
+                );
+
+            create index group_has_user_FK on user_group_relation (
+                                                                   user_id ASC
+                );
+        </sql>
+
+    </changeSet>
+
+</databaseChangeLog>

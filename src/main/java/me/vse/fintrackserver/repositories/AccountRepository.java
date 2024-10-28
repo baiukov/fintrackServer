@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, String> {
 
-    @Query("select a from Account a where a = :name")
+    @Query("select a from Account a where a.name = :name")
     Account findByName(@Param("name") String name);
 
 }

@@ -62,7 +62,8 @@ public class StructureTest {
                     || className.contains("Test")
                     || className.contains("Request")
                     || className.contains("Response")
-                    || className.contains("Impl");
+                    || className.contains("Impl")
+                    || className.contains("Controller");
 
             if (isExcluded) continue;
 

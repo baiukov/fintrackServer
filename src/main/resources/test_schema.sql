@@ -1,7 +1,5 @@
--- Create the schema first
 CREATE SCHEMA IF NOT EXISTS test_schema;
 
--- Set the schema to the one you just created
 SET SCHEMA test_schema;
 
 -- Drop tables if they exist, with schema reference
@@ -11,7 +9,7 @@ DROP TABLE IF EXISTS test_schema.Categories CASCADE;
 DROP TABLE IF EXISTS test_schema.Groups CASCADE;
 DROP TABLE IF EXISTS test_schema.Standing_orders CASCADE;
 DROP TABLE IF EXISTS test_schema.Transaction CASCADE;
-DROP TABLE IF EXISTS test_schema.Users CASCADE;
+DROP TABLE IF EXISTS test_schema.App_Users CASCADE;
 DROP TABLE IF EXISTS test_schema.transactions_categories CASCADE;
 DROP TABLE IF EXISTS test_schema.user_group_relation CASCADE;
 
@@ -33,7 +31,7 @@ CREATE TABLE if not exists test_schema.Account (
                                      PRIMARY KEY (id)
 );
 
-CREATE TABLE if not exists test_schema.Users (
+CREATE TABLE if not exists test_schema.App_Users (
                                    id VARCHAR(127) NOT NULL,
                                    email VARCHAR(127) NOT NULL,
                                    username VARCHAR(255) NOT NULL,
@@ -54,7 +52,7 @@ CREATE TABLE if not exists test_schema.Account_user_rights (
                                                  created_at TIMESTAMP,
                                                  updated_at TIMESTAMP,
                                                  PRIMARY KEY (user_id, account_id),
-                                                 FOREIGN KEY (user_id) REFERENCES test_schema.Users(id),
+                                                 FOREIGN KEY (user_id) REFERENCES test_schema.App_Users(id),
                                                  FOREIGN KEY (account_id) REFERENCES test_schema.Account(id)
 );
 
@@ -151,5 +149,5 @@ CREATE TABLE if not exists test_schema.user_group_relation
     group_id VARCHAR(127) NOT NULL,
     PRIMARY KEY (user_id, group_id),
     FOREIGN KEY (group_id) REFERENCES test_schema.Groups (id),
-    FOREIGN KEY (user_id) REFERENCES test_schema.Users (id)
+    FOREIGN KEY (user_id) REFERENCES test_schema.App_Users (id)
 );
