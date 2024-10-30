@@ -7,4 +7,5 @@
 
     <include file="/liquibase/changelog_100120241406.xml"/>
     <include file="/liquibase/changelog_100220241803.xml"/>
+    <include file="/liquibase/changelog_102820242212.xml"/>
 </databaseChangeLog>
