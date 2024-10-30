@@ -78,6 +78,9 @@ public class ReserveFundCheck extends Advice {
                             List.of(Double.toString(finalMaxTotalExpense))
                             ));
                 }
+
+                request = PageRequest.of(i, batchSize);
+                users = userRepository.findAll(request);
             }
         }
     }
