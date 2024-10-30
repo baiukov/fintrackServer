@@ -53,10 +53,13 @@ public class GoalPresentCheck extends Advice {
                 if (goalAccount == null) {
                     adviceService.addResponse(new AdviceResponse(
                             user.getId(),
-                            AdviceMessages.RESERVE_FUND_CREATION,
+                            AdviceMessages.GOAL_ISNT_PRESENT,
                             List.of()
                     ));
                 }
+
+                request = PageRequest.of(i, batchSize);
+                users = userRepository.findAll(request);
             }
         }
     }

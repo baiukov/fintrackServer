@@ -122,6 +122,9 @@ public class ExpenseByCategoryCheck extends Advice {
                 if (advice.get() != null) {
                     adviceService.addResponse(advice.get());
                 }
+
+                request = PageRequest.of(i, batchSize);
+                users = userRepository.findAll(request);
             }
         }
     }
