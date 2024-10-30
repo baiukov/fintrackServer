@@ -59,10 +59,10 @@ public class Account {
     private double interestRate;
 
     @Column(name = "goal_amount")
-    private Long goalAmount;
+    private Double goalAmount;
 
     @Column(name = "already_paid_amount")
-    private Long alreadyPaidAmount;
+    private Double alreadyPaidAmount;
 
     @Column(name = "is_removed", insertable = false)
     private boolean isRemoved;

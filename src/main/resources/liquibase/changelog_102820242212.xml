@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="28102024" author="Aleksei Baiukov">
+        <sql>
+            create table Tasks
+            (
+                id                  VARCHAR2(127) not null,
+                task_name             VARCHAR2(127) not null,
+                last_executed         DATE default CURRENT_TIMESTAMP not null,
+                day_of_execution      NUMBER not null,
+                created_at          DATE    default CURRENT_TIMESTAMP not null,
+                updated_at          DATE    default CURRENT_TIMESTAMP not null,
+                constraint PK_TASK primary key (id)
+            );
+
+            COMMENT ON COLUMN tasks.id IS 'Identification number of a task';
+            COMMENT ON COLUMN tasks.task_name IS 'Name of the scheduled task';
+            COMMENT ON COLUMN tasks.last_executed IS 'Last time when task was executed';
+            COMMENT ON COLUMN tasks.day_of_execution IS 'The day of month on which task will be executed';
+            COMMENT ON COLUMN tasks.created_at IS 'Time when task was created';
+            COMMENT ON COLUMN tasks.updated_at IS 'Time when task was updated';
+        </sql>
+
+        <rollback>
+            drop table Tasks cascade constraints;
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>
