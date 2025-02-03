@@ -17,5 +17,6 @@ public class GroupDto {
     private String name;
     private String adminId;
     private List<String> memberIds;
+    private List<String> accountIds;
 
 }

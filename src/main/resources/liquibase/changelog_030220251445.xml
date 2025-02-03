@@ -5,8 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <include file="/liquibase/changelog_100120241406.xml"/>
-    <include file="/liquibase/changelog_100220241803.xml"/>
-<!--    <include file="/liquibase/changelog_020220251251.xml"/>-->
-<!--    <include file="/liquibase/changelog_030220251445.xml"/>-->
+    <changeSet id="02022025" author="Aleksei Baiukov">
+        <sql>
+            ALTER TABLE account DROP COLUMN user_id;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

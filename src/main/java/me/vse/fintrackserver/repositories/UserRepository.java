@@ -12,6 +12,9 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
+    @Query(value = "select u from User u where lower(u.userName) like lower(concat('%', :username, '%'))")
+    List<User> findAllByUserName(String username, Pageable pageable);
+
     @Query("select u.id from User u where lower(u.userName) = lower(:username)")
     String findByUserName(@Param("username") String username);
 

@@ -3,27 +3,46 @@ package me.vse.fintrackserver.services;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.model.User;
+import me.vse.fintrackserver.model.dto.SimplifiedEntityDto;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 
 @Service
+@AllArgsConstructor
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private MessageSource messageSource;
-
-    @Autowired
     private EntityManager entityManager;
+
+    @Transactional
+    public List<User> getAll(int pageSize, int pageNumber) {
+        return userRepository.findAllPageable(PageRequest.of(pageNumber, pageSize));
+    }
+
+    @Transactional
+    public List<SimplifiedEntityDto> getByName(String name, int limit) {
+        List<User> users = userRepository.findAllByUserName(name, PageRequest.of(0, limit));
+        List<SimplifiedEntityDto> simplifiedUsers = new ArrayList<>();
+        for (User user : users) {
+            simplifiedUsers.add(
+                    new SimplifiedEntityDto(user.getId(), user.getUserName())
+            );
+        }
+        return simplifiedUsers;
+    }
 
     @Transactional
     public User registerUser(String email, String userName, String password) {
@@ -61,13 +80,13 @@ public class UserService {
         if (!password.matches(moreThan8Character)) {
             return ErrorMessages.PASSWORD_LESS_THAN_8_CHARS;
         } else if (!password.matches(containsUpperCaseLetter)) {
-            return ErrorMessages.PASSWORD_DOESNT_CONTAIN_UPPERCASE_LETTER;
+                return ErrorMessages.PASSWORD_DOESNT_CONTAIN_UPPERCASE_LETTER;
         } else if (!password.matches(containsLowerCaseLetter)) {
             return ErrorMessages.PASSWORD_DOESNT_CONTAIN_LOWERCASE_LETTER;
         } else if (!password.matches(containsDigit)) {
             return ErrorMessages.PASSWORD_DOESNT_CONTAIN_DIGIT;
         } else if (!password.matches(doesntContainWhiteSpace)) {
-            return ErrorMessages.PASSWORD_CONTAINS_WHITESPACES;
+                return ErrorMessages.PASSWORD_CONTAINS_WHITESPACES;
         } else {
             return null;
         }
@@ -87,7 +106,7 @@ public class UserService {
         return user;
     }
 
-    public void setPincode(UUID id, String pincode) {
+    public void setPincode(String id, String pincode) {
         String only4DigitsRegex = "^\\d{4}$";
         if (!pincode.matches(only4DigitsRegex)) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_PINCODE.name());
