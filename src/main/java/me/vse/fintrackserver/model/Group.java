@@ -30,6 +30,11 @@ public class Group {
     @JsonIgnore
     private List<UserGroupRelation> groupUsersRelations;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "group")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<AccountGroupRelation> accountGroupsRelations;
+
     @Column(name = "group_name")
     private String name;
 

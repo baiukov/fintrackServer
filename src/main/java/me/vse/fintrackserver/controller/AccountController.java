@@ -106,15 +106,33 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/retrieveAll")
+    @GetMapping("/retrieveAll")
     @Operation(summary = "Retrieve All Accounts", description = "Get all accounts for a specific user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
     })
     public ResponseEntity<?> retrieveAll(
             @Parameter(description = "User ID for which to retrieve accounts", required = true)
-            @RequestBody UserIdDto userId) {
-        return ResponseEntity.ok(accountService.retrieveAll(userId.getUserId()));
+            @RequestParam String userId) {
+        return ResponseEntity.ok(accountService.retrieveAll(userId));
+    }
+
+    @GetMapping("/retrievaAllByName")
+    @Operation(summary = "Retrieve All Accounts by name and user id", description = "Get all accounts for a specific user with name filter.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
+    })
+    public ResponseEntity<?> retrieveAllByName(
+            @Parameter(description = "User ID for which to retrieve accounts", required = true)
+            @RequestParam String userId,
+
+            @Parameter(description = "Part of the account name, if present")
+            @RequestParam(required = false, defaultValue = "") String name,
+
+            @Parameter(description = "Limit of the found account list")
+            @RequestParam(required = false, defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok(accountService.retrieveAllByName(userId, name, limit));
     }
 
     @PatchMapping("/update")

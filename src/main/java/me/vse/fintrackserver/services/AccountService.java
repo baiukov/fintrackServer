@@ -5,19 +5,17 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import me.vse.fintrackserver.controller.AssetController;
 import me.vse.fintrackserver.enums.AccountType;
 import me.vse.fintrackserver.enums.ErrorMessages;
-import me.vse.fintrackserver.enums.TransactionTypes;
 import me.vse.fintrackserver.enums.UserRights;
 import me.vse.fintrackserver.mappers.AccountMapper;
 import me.vse.fintrackserver.model.*;
 import me.vse.fintrackserver.model.dto.AccountDto;
+import me.vse.fintrackserver.model.dto.SimplifiedEntityDto;
 import me.vse.fintrackserver.repositories.AccountRepository;
-import me.vse.fintrackserver.repositories.TransactionRepository;
 import me.vse.fintrackserver.rest.requests.AccountAddRequest;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
@@ -164,6 +161,14 @@ public class AccountService {
                 .filter(Objects::nonNull)
                 .map(AccountUserRights::getAccount)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<SimplifiedEntityDto> retrieveAllByName(String userId, String name, int limit) {
+        List<Account> accounts = accountRepository.findByUserIdAndName(userId, name, PageRequest.of(0, limit));
+        return accounts.stream()
+                .map(account -> new SimplifiedEntityDto(account.getId(), account.getName()))
+                .toList();
     }
 
     @Transactional

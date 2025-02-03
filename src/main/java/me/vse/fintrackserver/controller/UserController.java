@@ -25,6 +25,18 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @GetMapping("/getAllByName")
+    @Operation(summary = "Get All Users by part of the user name", description = "Retrieve all users with limit by part of the user name.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved users"),
+            @ApiResponse(responseCode = "400", description = "Invalid page size or page number")
+    })
+    private ResponseEntity<?> getAllByName(
+            @Parameter(description = "Part of the user name", required = true) @RequestParam("name") String name,
+            @Parameter(description = "Number of users", required = false, example = "10") @RequestParam(required = false, defaultValue = "10") int limit) {
+        return ResponseEntity.ok(userService.getByName(name, limit));
+    }
+
     @GetMapping("/getAll")
     @Operation(summary = "Get All Users", description = "Retrieve all users with pagination.")
     @ApiResponses(value = {

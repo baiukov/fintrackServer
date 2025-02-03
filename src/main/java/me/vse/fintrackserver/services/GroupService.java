@@ -3,14 +3,11 @@ package me.vse.fintrackserver.services;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import me.vse.fintrackserver.enums.ErrorMessages;
-import me.vse.fintrackserver.model.Asset;
-import me.vse.fintrackserver.model.Group;
-import me.vse.fintrackserver.model.User;
-import me.vse.fintrackserver.model.UserGroupRelation;
+import me.vse.fintrackserver.enums.UserRights;
+import me.vse.fintrackserver.model.*;
 import me.vse.fintrackserver.model.dto.GroupDto;
-import me.vse.fintrackserver.repositories.GroupRepository;
-import me.vse.fintrackserver.repositories.UserGroupRelationRepository;
-import me.vse.fintrackserver.repositories.UserRepository;
+import me.vse.fintrackserver.repositories.*;
+import me.vse.fintrackserver.rest.responses.GroupViewResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,10 +31,14 @@ public class GroupService {
     private GroupRepository groupRepository;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private UserGroupRelationRepository userGroupRelationRepository;
 
+
     @Transactional
-    public List<Group> getAll(String userId) {
+    public List<GroupViewResponse> getAll(String userId) {
         if (userId == null) {
             throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
@@ -46,9 +47,40 @@ public class GroupService {
             throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
 
-        return user.getUserGroupRelations().stream()
+        List<GroupViewResponse> groups = user.getUserGroupRelations().stream()
                 .map(UserGroupRelation::getGroup)
-                .collect(Collectors.toList());
+                .map(group -> GroupViewResponse.builder()
+                        .id(group.getId())
+                        .name(group.getName())
+                        .users(
+                                group.getGroupUsersRelations()
+                                        .stream()
+                                        .map(UserGroupRelation::getUser)
+                                        .collect(Collectors.toList()))
+                        .accounts(
+                                group.getAccountGroupsRelations()
+                                        .stream()
+                                        .map(AccountGroupRelation::getAccount)
+                                        .collect(Collectors.toList())
+                        )
+                        .build())
+                .toList();
+
+        GroupViewResponse otherGroup = user.getAccountUserRights()
+                .stream()
+                .filter(rights ->
+                        rights.getRights().equals(UserRights.READ) || rights.getRights().equals(UserRights.WRITE))
+                .map(AccountUserRights::getAccount)
+                .filter(account -> groups.stream().map(GroupViewResponse::getAccounts)
+                        .flatMap(List::stream)
+                        .noneMatch(existingAccount -> existingAccount.getId().equals(account.getId())))
+                .map(account -> GroupViewResponse.builder().accounts(List.of(account)).build())
+                .findFirst()
+                .orElse(null);
+
+        List<GroupViewResponse> response = new ArrayList<>(groups);
+        response.add(otherGroup);
+        return response;
     }
 
     @Transactional
@@ -86,6 +118,17 @@ public class GroupService {
 
         entityManager.persist(group);
         userGroupRelationRepository.saveAll(userGroupRelations);
+
+        List<Account> accounts = accountRepository.findAllByIds(groupDto.getAccountIds());
+
+        for (Account account : accounts) {
+            AccountGroupRelation agr = AccountGroupRelation.builder()
+                    .group(group)
+                    .account(account)
+                    .build();
+
+            entityManager.persist(agr);
+        }
 
         return group;
     }
