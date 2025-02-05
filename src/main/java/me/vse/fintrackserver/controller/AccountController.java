@@ -177,6 +177,31 @@ public class AccountController {
     public ResponseEntity<?> update(
             @Parameter(description = "Updated details of the account", required = true)
             @RequestBody AccountDto request) {
-        return ResponseEntity.ok(accountService.update(request));
+
+        try {
+            return ResponseEntity.ok(accountService.update(request));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete")
+    @Operation(summary = "Delete Account", description = "Delete an existing account, if possible for user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Account successfully deleted"),
+            @ApiResponse(responseCode = "409", description = "User doesnt have permission")
+    })
+    public ResponseEntity<?> delete(
+            @Parameter(description = "ID of the owner of the account", required = true)
+            @RequestParam String userId,
+
+            @Parameter(description = "Account id", required = true)
+            @RequestParam String accountId
+    ) {
+        try {
+            return ResponseEntity.ok(accountService.delete(accountId, userId));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
     }
 }

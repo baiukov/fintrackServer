@@ -133,6 +133,7 @@ public class AccountService {
                 .name(accountRequest.getName())
                 .type(type)
                 .currency(currency)
+                .emoji(accountRequest.getEmoji())
                 .initialAmount(accountRequest.getInitialAmount())
                 .interestRate(accountRequest.getInterestRate())
                 .alreadyPaidAmount(accountRequest.getAlreadyPaidAmount())
@@ -209,6 +210,29 @@ public class AccountService {
             throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
         return account;
+    }
+
+    public Account delete(String id, String userId) {
+       Account account = entityManager.find(Account.class, id);
+       if (account == null) {
+           throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+       }
+
+       User user = entityManager.find(User.class, userId);
+       if (user == null) {
+           throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+       }
+
+       if (user.getAccountUserRights().stream()
+               .filter(accountUserRights -> accountUserRights.getAccount().getId().equals(account.getId()))
+               .noneMatch(accountUserRights -> accountUserRights.getRights().equals(UserRights.WRITE))) {
+           throw new IllegalArgumentException(ErrorMessages.UNPERMITTED_OPERATION.name());
+       }
+
+       account.setRemoved(true);
+       account.setRemovedAt(LocalDateTime.now());
+       accountRepository.save(account);
+       return account;
     }
 
 }
