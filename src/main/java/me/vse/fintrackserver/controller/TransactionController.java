@@ -118,10 +118,11 @@ public class TransactionController {
             @ApiResponse(responseCode = "409", description = "Conflict: transaction could not be deleted")
     })
     public ResponseEntity<?> delete(
-            @Parameter(description = "The ID of the transaction to delete", required = true) @RequestParam String transactionId
+            @Parameter(description = "The ID of the transaction to delete", required = true) @RequestParam String transactionId,
+            @Parameter(description = "The ID of the owner of the transaction", required = true) @RequestParam String userId
     ) {
         try {
-            return ResponseEntity.ok(transactionService.delete(transactionId));
+            return ResponseEntity.ok(transactionService.delete(transactionId, userId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }

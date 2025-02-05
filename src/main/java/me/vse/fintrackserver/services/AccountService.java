@@ -19,9 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Currency;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -156,9 +154,32 @@ public class AccountService {
 
     @Transactional
     public List<Account> retrieveAll(String userId) {
+        User user = entityManager.find(User.class, userId);
+        Set<Account> accountByGroup = user.getUserGroupRelations().stream()
+                .map(UserGroupRelation::getGroup)
+                .map(Group::getAccountGroupsRelations)
+                .flatMap(List::stream)
+                .map(AccountGroupRelation::getAccount)
+                .collect(Collectors.toSet());
+
+        Set<Account> accountsByRights = user.getAccountUserRights()
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(aur -> aur.getRights().equals(UserRights.WRITE) || aur.getRights().equals(UserRights.READ))
+                .map(AccountUserRights::getAccount)
+                .collect(Collectors.toSet());
+
+        Set<Account> allAccounts = new HashSet<>(accountByGroup);
+        allAccounts.addAll(accountsByRights);
+        return new ArrayList<>(allAccounts);
+    }
+
+    @Transactional
+    public List<Account> retrieveAllWhereIsOwner(String userId) {
         return entityManager.find(User.class, userId).getAccountUserRights()
                 .stream()
                 .filter(Objects::nonNull)
+                .filter(AccountUserRights::isOwner)
                 .map(AccountUserRights::getAccount)
                 .collect(Collectors.toList());
     }

@@ -64,6 +64,9 @@ public class Transaction {
     @Column(name = "photo")
     private String photo;
 
+    @Column(name = "icon")
+    private String icon;
+
     @Column(name = "is_removed")
     private boolean isRemoved;
 

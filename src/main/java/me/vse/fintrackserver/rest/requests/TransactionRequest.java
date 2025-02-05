@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class TransactionRequest {
-
-
     private String id;
     private String accountId;
     private String forAssetId;

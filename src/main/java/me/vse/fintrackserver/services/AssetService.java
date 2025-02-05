@@ -10,6 +10,7 @@ import me.vse.fintrackserver.model.Asset;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.AssetDto;
 import me.vse.fintrackserver.repositories.AssetRepository;
+import me.vse.fintrackserver.rest.requests.AssetAddRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import javax.naming.AuthenticationException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +38,7 @@ public class AssetService {
     private AssetMapper assetMapper;
 
     @Transactional
-    public List<Asset> getAll(String accountId) {
+    public List<Asset> getAllByAccount(String accountId) {
         if (accountId == null) {
             throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
@@ -48,7 +50,22 @@ public class AssetService {
     }
 
     @Transactional
-    public Asset add(AssetDto assetDto) {
+    public List<Asset> getAll(String userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+        User user = entityManager.find(User.class, userId);
+        return user.getAccountUserRights()
+                .stream()
+                .filter(AccountUserRights::isOwner)
+                .map(AccountUserRights::getAccount)
+                .map(Account::getAssets)
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    @Transactional
+    public Asset add(AssetAddRequest assetDto) {
 
         if (assetDto.getName() == null) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_ASSET.name());
@@ -63,12 +80,10 @@ public class AssetService {
         Asset asset = Asset.builder()
                 .account(relatedAcc)
                 .name(assetDto.getName())
-                .color(assetDto.getColor())
                 .acquisitionPrice(assetDto.getAcquisitionPrice())
                 .depreciationPrice(assetDto.getDepreciationPrice())
                 .startDate(assetDto.getStartDateStr())
                 .endDate(assetDto.getEndDateStr())
-                .color(assetDto.getColor())
                 .icon(assetDto.getIcon())
                 .build();
 
@@ -130,10 +145,12 @@ public class AssetService {
         double assetUsageFullPrice = acquisitionPrice - depreciationPrice;
         LocalDateTime now = LocalDateTime.now();
 
-        boolean isAssetDepreciatedByDate = Duration.between(asset.getStartDate(), now).toDays() < 1;
+        boolean isAssetDepreciatedByDate = ChronoUnit.DAYS.between(asset.getStartDate(), now) < 1;
         if (isAssetDepreciatedByDate) return depreciationPrice;
 
-        long totalDaysOfUsage = Duration.between(asset.getStartDate(), asset.getEndDate()).toDays();
+        long totalDaysOfUsage = ChronoUnit.DAYS.between(asset.getStartDate(), asset.getEndDate());
+        if (totalDaysOfUsage == 0) return acquisitionPrice;
+
         double pricePerDateOfUsage = assetUsageFullPrice / totalDaysOfUsage;
 
         long daysInUse = Duration.between(asset.getStartDate(), now).toDays();

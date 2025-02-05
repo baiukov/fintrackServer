@@ -38,6 +38,11 @@ public class User {
     @JsonIgnore
     private List<UserGroupRelation> userGroupRelations;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<Category> categories;
+
     @Column(name = "email")
     private String email;
 

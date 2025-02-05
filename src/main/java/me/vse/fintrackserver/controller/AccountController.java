@@ -33,10 +33,16 @@ public class AccountController {
     })
     public ResponseEntity<?> getBalance(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the balance calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the balance calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime endDate
     ) {
         return ResponseEntity.ok(accountService.getBalance(id, fromDate, endDate));
     }
@@ -49,10 +55,16 @@ public class AccountController {
     })
     public ResponseEntity<?> getNetWorth(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the net worth calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the net worth calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime endDate
 
     ) {
         return ResponseEntity.ok(accountService.getNetWorth(id, fromDate, endDate));
@@ -66,10 +78,15 @@ public class AccountController {
     })
     public ResponseEntity<?> getIncome(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the income calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the income calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")LocalDateTime endDate
     ) {
         return ResponseEntity.ok(accountService.getIncome(id, fromDate, endDate));
     }
@@ -82,10 +99,16 @@ public class AccountController {
     })
     public ResponseEntity<?> getExpense(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the expense calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the expense calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime endDate
     ) {
         return ResponseEntity.ok(accountService.getExpense(id, fromDate, endDate));
     }
@@ -115,6 +138,17 @@ public class AccountController {
             @Parameter(description = "User ID for which to retrieve accounts", required = true)
             @RequestParam String userId) {
         return ResponseEntity.ok(accountService.retrieveAll(userId));
+    }
+
+    @GetMapping("/retrieveAllWhereOwner")
+    @Operation(summary = "Retrieve All Accounts Where User Is Owner", description = "Get all accounts for a specific user, who is an owner.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
+    })
+    public ResponseEntity<?> retrieveAllWhereIsOwner(
+            @Parameter(description = "User ID for which to retrieve accounts", required = true)
+            @RequestParam String userId) {
+        return ResponseEntity.ok(accountService.retrieveAllWhereIsOwner(userId));
     }
 
     @GetMapping("/retrievaAllByName")
