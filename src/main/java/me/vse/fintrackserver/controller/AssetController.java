@@ -98,17 +98,18 @@ public class AssetController {
         }
     }
 
-    @PatchMapping("/delete")
+    @DeleteMapping("/delete")
     @Operation(summary = "Delete Asset", description = "Delete an existing asset by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Asset successfully deleted"),
             @ApiResponse(responseCode = "409", description = "Conflict: asset could not be deleted")
     })
     public ResponseEntity<?> delete(
-            @Parameter(description = "The ID of the asset to delete", required = true) @RequestParam String id
+            @Parameter(description = "The ID of the asset to delete", required = true) @RequestParam String id,
+            @Parameter(description = "The ID of the asset owner", required = true) @RequestParam String userId
     ) throws AuthenticationException {
         try {
-            assetService.delete(id);
+            assetService.delete(id, userId);
             return ResponseEntity.ok(HttpStatus.OK);
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());

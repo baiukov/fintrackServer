@@ -105,6 +105,8 @@ public class GroupService {
 
         Group group = Group.builder()
                 .name(groupDto.getName())
+                .isRemoved(false)
+                .owner(admin)
                 .code("1234")
                 .build();
 

@@ -143,10 +143,12 @@
                 transaction_sample_id VARCHAR2(127) not null,
                 last_repeated_at      DATE default CURRENT_TIMESTAMP not null,
                 remind_days_before    INTEGER,
+                start_date            DATE default CURRENT_TIMESTAMP not null,
+                end_date              DATE,
                 created_at            DATE                           not null,
                 updated_at            DATE                           not null,
                 constraint PK_STANDING_ORDERS primary key (id),
-                constraint FK_STANDING_IS_REPEAT_TRANSACT foreign key (id)
+                constraint FK_STANDING_IS_REPEAT_TRANSACT foreign key (transaction_sample_id)
                     references Transaction (id)
             );
 

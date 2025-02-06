@@ -61,6 +61,7 @@ public class AssetService {
                 .map(AccountUserRights::getAccount)
                 .map(Account::getAssets)
                 .flatMap(List::stream)
+                .filter(asset -> !asset.isRemoved())
                 .toList();
     }
 
@@ -123,10 +124,28 @@ public class AssetService {
     }
 
     @Transactional
-    public void delete(String id) {
+    public void delete(String id, String userId) throws AuthenticationException {
         Asset asset = entityManager.find(Asset.class, id);
         if (asset == null) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_ASSET.name());
+        }
+
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new AuthenticationException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        boolean doesUserHaveRights = user.getAccountUserRights().stream()
+                .map(AccountUserRights::getAccount)
+                .filter(not(Account::isRemoved))
+                .map(Account::getAssets)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .filter(not(Asset::isRemoved))
+                .anyMatch(currentAsset -> currentAsset.equals(asset));
+
+        if (!doesUserHaveRights) {
+            throw new AuthenticationException(ErrorMessages.USER_DOESNT_HAVE_RIGHTS.name());
         }
 
         asset.setRemoved(true);
