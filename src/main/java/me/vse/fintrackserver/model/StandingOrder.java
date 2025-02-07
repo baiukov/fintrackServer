@@ -39,6 +39,12 @@ public class StandingOrder {
     @Column(name = "remind_days_before")
     private Integer remindDaysBefore;
 
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -64,6 +64,9 @@ public class Account {
     @Column(name = "already_paid_amount")
     private Double alreadyPaidAmount;
 
+    @Column(name = "icon")
+    private String emoji;
+
     @Column(name = "is_removed", insertable = false)
     private boolean isRemoved;
 

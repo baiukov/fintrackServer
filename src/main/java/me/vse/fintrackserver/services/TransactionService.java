@@ -10,8 +10,11 @@ import me.vse.fintrackserver.mappers.StandingOrderMapper;
 import me.vse.fintrackserver.model.*;
 import me.vse.fintrackserver.repositories.StandingOrderRepository;
 import me.vse.fintrackserver.repositories.TransactionRepository;
+import me.vse.fintrackserver.rest.requests.StandingOrderRequest;
 import me.vse.fintrackserver.rest.requests.TransactionRequest;
+import me.vse.fintrackserver.rest.responses.TransactionByCategoryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +44,10 @@ public class TransactionService {
     @Autowired
     private StandingOrderMapper standingOrderMapper;
 
+    @Autowired
+    @Lazy
+    private AccountService accountService;
+
     @Transactional
     public List<Transaction> findAllByAccount(String id,
                                               LocalDateTime fromDate,
@@ -61,14 +68,22 @@ public class TransactionService {
     }
 
     @Transactional
-    public Map<Category, List<Transaction>> findAllByCategories(String accountId,
-                                                    LocalDateTime fromDate,
-                                                    LocalDateTime endDate,
-                                                    boolean isIncome
+    public List<TransactionByCategoryResponse> findAllByCategories(String accountId,
+                                                                   LocalDateTime fromDate,
+                                                                   LocalDateTime endDate,
+                                                                   boolean isIncome
     ) {
         Account account = checkAccount(accountId, null);
         List<Transaction> transactionSet = isIncome ? getIncomeTransactions(account, fromDate, endDate)
                 : getExpenseTransactions(account, fromDate, endDate);
+
+        return transactionSet.stream()
+                .collect(Collectors.groupingBy(transaction ->
+                        Optional.ofNullable(transaction.getCategory())
+                                .orElse(Category.builder().name("Other").build())))
+                .entrySet().stream()
+                .map(entry -> new TransactionByCategoryResponse(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
 
         return transactionSet.stream().collect(Collectors.groupingBy(transaction ->
                 Optional.ofNullable(transaction.getCategory())
@@ -83,8 +98,53 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         performChecks(transactionRequest, transaction);
         entityManager.persist(transaction);
-        this.addStandingOrder(transaction, transactionRequest);
         return transaction;
+    }
+
+    @Transactional
+    public StandingOrder createStandingOrder(StandingOrderRequest standingOrderRequest) throws IllegalArgumentException {
+        Transaction transaction = entityManager.find(Transaction.class, standingOrderRequest.getTransactionId());
+        if (transaction == null) {
+            throw new IllegalArgumentException(ErrorMessages.TRANSACTION_DOESNT_EXIST.name());
+        }
+
+        User user = entityManager.find(User.class, standingOrderRequest.getUserId());
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        boolean doesntHaveRights = accountService.retrieveAll(user.getId()).stream()
+                .map(Account::getTransactions)
+                .flatMap(List::stream)
+                .toList()
+                .stream()
+                .noneMatch(currentTransaction -> currentTransaction.getId().equals(transaction.getId()));
+
+        if (doesntHaveRights) {
+            throw new IllegalArgumentException(ErrorMessages.UNPERMITTED_OPERATION.name());
+        }
+
+        StandingOrder standingOrder = StandingOrder.builder()
+                .transactionSample(transaction)
+                .frequency(standingOrderRequest.getFrequency())
+                .startDate(standingOrderRequest.getStartDate())
+                .endDate(standingOrderRequest.getEndDate())
+                .remindDaysBefore(standingOrderRequest.getRemindDaysBefore())
+                .lastRepeatedAt(LocalDateTime.now())
+                .build();
+
+        entityManager.persist(standingOrder);
+        return standingOrder;
+    }
+
+    @Transactional
+    public StandingOrder getStandingOrder(String transactionId) throws IllegalArgumentException {
+        Transaction transaction = entityManager.find(Transaction.class, transactionId);
+        if (transaction == null) {
+            throw new IllegalArgumentException(ErrorMessages.TRANSACTION_DOESNT_EXIST.name());
+        }
+
+        return transaction.getStandingOrder();
     }
 
     @Transactional
@@ -107,7 +167,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public Transaction delete(String id) {
+    public Transaction delete(String id, String userId) {
 
         // TODO check sender
         if (id == null) {
@@ -116,6 +176,21 @@ public class TransactionService {
 
         Transaction transaction = entityManager.find(Transaction.class, id);
         if (transaction == null) {
+            throw new IllegalArgumentException(ErrorMessages.TRANSACTION_DOESNT_EXIST.name());
+        }
+
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        if (accountService.retrieveAll(userId).stream()
+                        .map(Account::getTransactions)
+                        .flatMap(List::stream)
+                        .toList()
+                        .stream()
+                        .noneMatch(currentTransaction -> currentTransaction.getId().equals(transaction.getId()))
+        ) {
             throw new IllegalArgumentException(ErrorMessages.TRANSACTION_DOESNT_EXIST.name());
         }
 
@@ -246,11 +321,11 @@ public class TransactionService {
 
         StandingOrder standingOrder = transaction.getStandingOrder();
         if (standingOrder == null) {
-            this.addStandingOrder(transaction, transactionRequest);
+            this.createStandingOrder(standingOrderRequest);
             return;
         }
 
-        standingOrderMapper.updateStandingOrderFromRequest(transactionRequest, standingOrder);
+        standingOrderMapper.updateStandingOrderFromRequest(standingOrderRequest, standingOrder);
         standingOrderRepository.save(standingOrder);
     }
 

@@ -19,6 +19,7 @@
                 interest_rate       INTEGER default 0,
                 goal_amount         NUMBER(8,2) default 0,
                 already_paid_amount NUMBER(8,2) default 0,
+                icon                VARCHAR(127),
                 is_removed          NUMBER(1) default 0 not null,
                 removed_at          DATE,
                 created_at          DATE    default CURRENT_TIMESTAMP not null,
@@ -102,9 +103,14 @@
                 id         VARCHAR2(127) not null,
                 group_name VARCHAR2(1023) not null,
                 group_code VARCHAR2(16),
+                owner_id VARCHAR(127) not null,
                 created_at DATE not null,
                 updated_at DATE not null,
-                constraint PK_GROUPS primary key (id)
+                is_removed     NUMBER(1) default 0 not null,
+                removed_at     DATE,
+                constraint PK_GROUPS primary key (id),
+                constraint FK_USER_HAS_ACCOUNT foreign key (owner_id)
+                    references User (id)
             );
 
             create table Transaction
@@ -137,10 +143,12 @@
                 transaction_sample_id VARCHAR2(127) not null,
                 last_repeated_at      DATE default CURRENT_TIMESTAMP not null,
                 remind_days_before    INTEGER,
+                start_date            DATE default CURRENT_TIMESTAMP not null,
+                end_date              DATE,
                 created_at            DATE                           not null,
                 updated_at            DATE                           not null,
                 constraint PK_STANDING_ORDERS primary key (id),
-                constraint FK_STANDING_IS_REPEAT_TRANSACT foreign key (id)
+                constraint FK_STANDING_IS_REPEAT_TRANSACT foreign key (transaction_sample_id)
                     references Transaction (id)
             );
 
