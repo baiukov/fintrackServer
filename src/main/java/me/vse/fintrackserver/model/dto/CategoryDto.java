@@ -10,8 +10,8 @@ import lombok.Setter;
 public class CategoryDto {
 
     private String id;
+    private String userId;
     private String icon;
     private String name;
-    private String color;
 
 }

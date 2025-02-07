@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @ToString
 @EqualsAndHashCode
 public class Transaction {
@@ -45,7 +47,7 @@ public class Transaction {
     private TransactionTypes type;
 
     @Column(name = "amount")
-    private Long amount;
+    private double amount;
 
     @Column(name = "execution_date")
     private LocalDateTime executionDateTime;
@@ -61,6 +63,9 @@ public class Transaction {
 
     @Column(name = "photo")
     private String photo;
+
+    @Column(name = "icon")
+    private String icon;
 
     @Column(name = "is_removed")
     private boolean isRemoved;

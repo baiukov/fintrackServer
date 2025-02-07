@@ -52,7 +52,7 @@ public class Account {
     private Currency currency;
 
     @Column(name = "initial_amount")
-    private Long initialAmount;
+    private double initialAmount;
 
     @Column(name = "interest_rate")
     private double interestRate;
@@ -62,6 +62,9 @@ public class Account {
 
     @Column(name = "already_paid_amount")
     private Long alreadyPaidAmount;
+
+    @Column(name = "icon")
+    private String emoji;
 
     @Column(name = "is_removed", insertable = false)
     private boolean isRemoved;

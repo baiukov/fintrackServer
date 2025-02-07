@@ -12,15 +12,13 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class TransactionRequest {
-
-
     private String id;
     private String accountId;
     private String forAssetId;
     private String receiverId;
     private String categoryId;
     private TransactionTypes type;
-    private Long amount;
+    private double amount;
     private LocalDateTime executionDateTime;
     private String note;
     private Double lat;

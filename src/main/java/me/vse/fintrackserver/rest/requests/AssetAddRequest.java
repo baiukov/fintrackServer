@@ -1,4 +1,4 @@
-package me.vse.fintrackserver.model.dto;
+package me.vse.fintrackserver.rest.requests;
 
 import lombok.*;
 
@@ -9,10 +9,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class AssetDto {
+public class AssetAddRequest {
 
     private String senderId;
-    private String id;
     private String name;
     private String type;
     private String accountId;
@@ -20,8 +19,6 @@ public class AssetDto {
     private double depreciationPrice;
     private LocalDate startDateStr = LocalDate.now();
     private LocalDate endDateStr;
-    private String color;
     private String icon;
-    private boolean isRemoved;
 
 }

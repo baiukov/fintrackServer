@@ -119,9 +119,10 @@ public class UserService {
 
         String hasedPincode = BCrypt.withDefaults().hashToString(12, pincode.toCharArray());
         user.setPincode(hasedPincode);
+        userRepository.save(user);
     }
 
-    public boolean verifyPinCode(UUID id, String pincode) {
+    public boolean verifyPinCode(String id, String pincode) {
         String only4DigitsRegex = "^\\d{4}$";
         if (!pincode.matches(only4DigitsRegex)) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_PINCODE.name());

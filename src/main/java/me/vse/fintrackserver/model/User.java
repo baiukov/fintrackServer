@@ -3,6 +3,7 @@ package me.vse.fintrackserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.commons.lang3.builder.EqualsExclude;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -24,7 +25,6 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-//    @GenericGenerator(name = "uuid", strategy = "me.vse.fintrackserver.utils.GroupCodeGenerator")
     @Column(name = "id", unique = true, nullable = false)
     private String id;
 
@@ -38,6 +38,11 @@ public class User {
     @JsonIgnore
     private List<UserGroupRelation> userGroupRelations;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<Category> categories;
+
     @Column(name = "email")
     private String email;
 
@@ -45,9 +50,12 @@ public class User {
     private String userName;
 
     @Column(name = "password")
+    @JsonIgnore
+    @EqualsAndHashCode.Exclude
     private String password;
 
     @Column(name = "pincode")
+    @JsonIgnore
     private String pincode;
 
     @Column(name = "is_blocked")

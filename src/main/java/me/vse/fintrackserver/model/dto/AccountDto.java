@@ -1,9 +1,6 @@
 package me.vse.fintrackserver.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import me.vse.fintrackserver.enums.AccountType;
 
 import java.util.Currency;
@@ -12,12 +9,14 @@ import java.util.Currency;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class AccountDto {
     private String id;
     private String name;
     private AccountType type;
+    private String emoji;
     private Currency currency;
-    private Long initialAmount;
+    private double initialAmount;
     private double interestRate;
     private Long goalAmount;
     private Long alreadyPaidAmount;
