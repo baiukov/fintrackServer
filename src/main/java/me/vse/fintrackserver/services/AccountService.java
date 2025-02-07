@@ -55,7 +55,7 @@ public class AccountService {
         AtomicReference<Double> initialAmount = new AtomicReference<>(account.getInitialAmount());
 
         Consumer<Double> increaseConsumer = amount -> {
-            initialAmount.updateAndGet(v -> v + amount);
+            initialAmount.updateAndGet(v -> (v + amount));
         };
 
         account.getAssets().stream()

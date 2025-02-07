@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="02022025" author="Aleksei Baiukov">
+        <sql>
+            create table transaction_aggregation_daily
+            (
+                id             VARCHAR2(127) not null,
+                account_id     VARCHAR2(127) not null,
+                category_id    VARCHAR2(127),
+
+
+                transaction_id VARCHAR2(127) not null,
+                category_id    VARCHAR2(127) not null,
+                constraint PK_TRANSACTIONS_CATEGORIES primary key (transaction_id, category_id),
+                constraint FK_TRANSACT_CATEGORIE_TRANSACT foreign key (transaction_id)
+                    references Transaction (id),
+                constraint FK_TRANSACT_TRANSACTI_CATEGORI foreign key (category_id)
+                    references Categories (id)
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
