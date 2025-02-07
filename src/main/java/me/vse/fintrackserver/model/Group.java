@@ -8,7 +8,9 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "groups")
@@ -59,4 +61,30 @@ public class Group {
     @Column(name = "removed_at")
     private LocalDateTime removedAt;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Group group = (Group) o;
+
+        return Objects.equals(id, group.id) &&
+                Objects.equals(name, group.name) &&
+                Objects.equals(code, group.code) &&
+                Objects.equals(
+                        createdAt != null ? createdAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                        group.createdAt != null ? group.createdAt.truncatedTo(ChronoUnit.SECONDS) : null) &&
+                Objects.equals(
+                        updatedAt != null ? updatedAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                        group.updatedAt != null ? group.updatedAt.truncatedTo(ChronoUnit.SECONDS) : null);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                id,
+                name,
+                code,
+                createdAt != null ? createdAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                updatedAt != null ? updatedAt.truncatedTo(ChronoUnit.SECONDS) : null);
+    }
 }

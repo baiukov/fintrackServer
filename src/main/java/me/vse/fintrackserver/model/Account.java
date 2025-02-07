@@ -8,8 +8,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Currency;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "account")
@@ -19,7 +21,6 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode
 public class Account {
 
     @Id
@@ -58,10 +59,10 @@ public class Account {
     private double interestRate;
 
     @Column(name = "goal_amount")
-    private Long goalAmount;
+    private Double goalAmount;
 
     @Column(name = "already_paid_amount")
-    private Long alreadyPaidAmount;
+    private Double alreadyPaidAmount;
 
     @Column(name = "icon")
     private String emoji;
@@ -79,5 +80,48 @@ public class Account {
 
     @Column(name = "removed_at")
     private LocalDateTime removedAt;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+
+        return Double.compare(account.initialAmount, initialAmount) == 0 &&
+                Double.compare(account.interestRate, interestRate) == 0 &&
+                isRemoved == account.isRemoved &&
+                Objects.equals(id, account.id) &&
+                Objects.equals(name, account.name) &&
+                type == account.type &&
+                Objects.equals(currency, account.currency) &&
+                Objects.equals(goalAmount, account.goalAmount) &&
+                Objects.equals(alreadyPaidAmount, account.alreadyPaidAmount) &&
+                Objects.equals(
+                        createdAt != null ? createdAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                        account.createdAt != null ? account.createdAt.truncatedTo(ChronoUnit.SECONDS) : null) &&
+                Objects.equals(
+                        updatedAt != null ? updatedAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                        account.updatedAt != null ? account.updatedAt.truncatedTo(ChronoUnit.SECONDS) : null) &&
+                Objects.equals(
+                        removedAt != null ? removedAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                        account.removedAt != null ? account.removedAt.truncatedTo(ChronoUnit.SECONDS) : null);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                id,
+                name,
+                type,
+                currency,
+                initialAmount,
+                interestRate,
+                goalAmount,
+                alreadyPaidAmount,
+                isRemoved,
+                createdAt != null ? createdAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                updatedAt != null ? updatedAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                removedAt != null ? removedAt.truncatedTo(ChronoUnit.SECONDS) : null);
+    }
 
 }

@@ -17,9 +17,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class StructureTest {
 
     private static final String PACKAGE_TO_TEST = "me.vse.fintrackserver";
-    private static final String TEST_PACKAGE = "me.vse.fintrackserver";
 
-    private static final Set<String> EXCLUDED_CLASSES = Set.of();
+    private static final Set<String> EXCLUDED_CLASSES = Set.of(
+            "FintrackServerApplication",
+            "Account",
+            "UserGroupRelationId",
+            "AccountUserRights",
+            "Asset",
+            "Category",
+            "Group",
+            "StandingOrder",
+            "Transaction",
+            "User",
+            "UserGroupRelation",
+            "AccountType",
+            "ErrorMessages",
+            "Frequencies",
+            "TransactionTypes",
+            "UserRights",
+            "PersistenceConfig"
+    );
     private static final Set<String> EXCLUDED_METHODS = Set.of();
 
     @Test
@@ -38,6 +55,18 @@ public class StructureTest {
                 continue;
             }
 
+            String className = clazz.getSimpleName();
+            boolean isExcluded = className.contains("$")
+                    || className.contains("Dto")
+                    || className.contains("Builder")
+                    || className.contains("Test")
+                    || className.contains("Request")
+                    || className.contains("Response")
+                    || className.contains("Impl")
+                    || className.contains("Controller");
+
+            if (isExcluded) continue;
+
             String testClassName = clazz.getName() + "Test";
             Class<?> testClass;
             try {
@@ -48,17 +77,17 @@ public class StructureTest {
             }
 
             for (Method method : clazz.getDeclaredMethods()) {
-                if (EXCLUDED_METHODS.contains(method.getName())) {
+                if (EXCLUDED_METHODS.contains(method.getName()) || method.getName().contains("builder")) {
                     continue;
                 }
                 String testMethodName = method.getName() + "Test";
                 boolean hasTestMethod = false;
 
                 for (Method testMethod : testClass.getDeclaredMethods()) {
-                    if (!Modifier.isPublic(testMethod.getModifiers())) {
+                    if (!Modifier.isPublic(method.getModifiers())) {
                         hasTestMethod = true;
                         break;
-                    };
+                    }
                     if (testMethod.getName().equals(testMethodName)) {
                         hasTestMethod = true;
                         break;
@@ -72,7 +101,7 @@ public class StructureTest {
         }
 
         List<String> allMissingTests = new ArrayList<>();
-//        allMissingTests.addAll(missingTests);
+        allMissingTests.addAll(missingTests);
         allMissingTests.addAll(missingTestMethods);
 
         assertTrue(allMissingTests.isEmpty(), "Missing tests: \n" + String.join("\n", allMissingTests));

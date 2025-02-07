@@ -2,6 +2,7 @@ package me.vse.fintrackserver.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.mappers.CategoryMapper;
 import me.vse.fintrackserver.model.Account;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class CategoryService {
 
     @Autowired

@@ -1,12 +1,12 @@
 package me.vse.fintrackserver.model.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
+@Builder
 public class CategoryDto {
 
     private String id;

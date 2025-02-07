@@ -21,6 +21,8 @@ public interface AccountRepository extends JpaRepository<Account, String> {
         AND LOWER(a.name) LIKE LOWER(CONCAT('%', :name, '%'))
     """)
     List<Account> findByUserIdAndName(@Param("id") String id, @Param("name") String name, Pageable pageable);
+    @Query("select a from Account a where a.name = :name")
+    Account findByName(@Param("name") String name);
 
     @Query("select a from Account a where lower(a.id) in (:ids)")
     List<Account> findAllByIds(@Param("ids") List<String> ids);

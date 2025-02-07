@@ -10,6 +10,7 @@ import me.vse.fintrackserver.model.identifiers.UserGroupRelationId;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 @ToString
 @IdClass(UserGroupRelationId.class)
 public class UserGroupRelation {

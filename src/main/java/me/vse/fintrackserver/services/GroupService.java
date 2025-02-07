@@ -2,6 +2,7 @@ package me.vse.fintrackserver.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.enums.UserRights;
 import me.vse.fintrackserver.mappers.GroupMapper;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class GroupService {
 
     @Autowired
@@ -45,7 +47,7 @@ public class GroupService {
         }
         User user = entityManager.find(User.class, userId);
         if (user == null) {
-            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
         }
 
         List<GroupViewResponse> groups = user.getUserGroupRelations().stream()
@@ -108,6 +110,7 @@ public class GroupService {
                 .isRemoved(false)
                 .owner(admin)
                 .code("1234")
+                .code(generateGroupCode(groupDto.getName()))
                 .build();
 
         List<UserGroupRelation> userGroupRelations = new ArrayList<>();
@@ -267,6 +270,9 @@ public class GroupService {
         }
 
         Group group = entityManager.find(Group.class, id);
+
+      public void delete(String groupId) {
+        Group group = entityManager.find(Group.class, groupId);
         if (group == null) {
             throw new IllegalArgumentException(ErrorMessages.GROUP_DOESNT_EXIST.name());
         }
@@ -278,5 +284,6 @@ public class GroupService {
         group.setRemoved(true);
         group.setRemovedAt(LocalDateTime.now());
         groupRepository.save(group);
+        groupRepository.delete(group);
     }
 }

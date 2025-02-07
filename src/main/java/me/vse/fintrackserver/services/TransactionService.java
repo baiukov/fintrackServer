@@ -2,6 +2,7 @@ package me.vse.fintrackserver.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.enums.Frequencies;
 import me.vse.fintrackserver.enums.TransactionTypes;
@@ -14,19 +15,21 @@ import me.vse.fintrackserver.rest.requests.TransactionRequest;
 import me.vse.fintrackserver.rest.responses.TransactionByCategoryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class TransactionService {
 
     @Autowired
@@ -82,6 +85,11 @@ public class TransactionService {
                 .map(entry -> new TransactionByCategoryResponse(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
 
+        return transactionSet.stream().collect(Collectors.groupingBy(transaction ->
+                Optional.ofNullable(transaction.getCategory())
+                        .orElse(Category.builder().name("Other").build())
+                )
+        );
     }
 
     @Transactional
@@ -154,6 +162,7 @@ public class TransactionService {
         }
 
         performChecks(transactionRequest, transaction);
+        transactionRepository.save(transaction);
         return transaction;
     }
 
@@ -208,7 +217,7 @@ public class TransactionService {
     }
 
     private Account checkAccount(String id, Account previousValue) {
-        if (previousValue != null) return previousValue;
+        if (id == null && previousValue != null) return previousValue;
         if (id == null) {
             throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
@@ -288,8 +297,20 @@ public class TransactionService {
     }
 
     @Transactional
-    public void updateStandingOrder(StandingOrderRequest standingOrderRequest) {
-        String transactionId = standingOrderRequest.getTransactionId();
+    public void addStandingOrder(Transaction sample, TransactionRequest transactionRequest) {
+        Frequencies frequency = transactionRequest.getFrequency();
+        if (frequency == null || sample == null) return;
+        StandingOrder standingOrder = StandingOrder.builder()
+                .transactionSample(sample)
+                .frequency(frequency)
+                .remindDaysBefore(transactionRequest.getRemindDaysBefore())
+                .build();
+        entityManager.persist(standingOrder);
+    }
+
+    @Transactional
+    public void updateStandingOrder(TransactionRequest transactionRequest) {
+        String transactionId = transactionRequest.getId();
         if (transactionId == null) {
             throw new IllegalArgumentException(ErrorMessages.TRANSACTION_DOESNT_EXIST.name());
         }
@@ -336,7 +357,8 @@ public class TransactionService {
                         (!transaction.getAccount().equals(transaction.getReceiver()));
 
         return getTransactionSet(account, fromDate, endDate)
-                .stream().filter(transaction -> isExpense.test(transaction)
+                .stream()
+                .filter(transaction -> isExpense.test(transaction)
                         || isOutGoingTransfer.test(transaction))
                 .collect(Collectors.toList());
     }
@@ -386,4 +408,33 @@ public class TransactionService {
             return transactionRepository.findAllByAccount(account);
         }
     }
+
+    @Scheduled(cron = "0 0 2 * * ?") // 2 AM
+    public void runStandingOrders() {
+        int batchSize = 50;
+        PageRequest pageRequest = PageRequest.of(0, batchSize);
+        Page<StandingOrder> standingOrders = standingOrderRepository.findAll(pageRequest);
+        int totalPages = standingOrders.getTotalPages();
+
+        for (int i = 0; i < totalPages; i++) {
+
+            for (StandingOrder standingOrder : standingOrders) {
+                Transaction transaction = standingOrder.getTransactionSample();
+                LocalDateTime now = LocalDateTime.now();
+                transaction.setExecutionDateTime(now);
+                transaction.setCreatedAt(now);
+                transaction.setUpdatedAt(now);
+                entityManager.persist(transaction);
+
+                standingOrder.setLastRepeatedAt(now);
+                standingOrderRepository.save(standingOrder);
+            }
+
+            pageRequest = PageRequest.of(i, batchSize);
+            standingOrders = standingOrderRepository.findAll(pageRequest);
+        }
+
+    }
+
+
 }

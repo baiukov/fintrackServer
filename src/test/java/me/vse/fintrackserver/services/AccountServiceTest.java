@@ -800,7 +800,7 @@ public class AccountServiceTest {
     @ParameterizedTest(name = "Check net worth test. Given does account exist: {0}, account: {1}, " +
             "expected amount: {2}, exception message: {3}")
     @MethodSource("getCheckNetWorthScenarios")
-    public void checkNetWorthTest(boolean doesAccExist, Account account, double expected,
+    public void getNetWorthTest(boolean doesAccExist, Account account, double expected,
                                   String exceptionMessage
     ) {
         expect(entityManager.find(Account.class, account.getId())).andReturn(doesAccExist ? account : null);

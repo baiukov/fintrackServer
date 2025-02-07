@@ -3,24 +3,22 @@ package me.vse.fintrackserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.commons.lang3.builder.EqualsExclude;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 @Entity
-@Table(name="users")
+@Table(name="Users")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode
 public class User {
 
     @Id
@@ -71,5 +69,39 @@ public class User {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        User user = (User) o;
+
+        return isBlocked == user.isBlocked &&
+                isAdmin == user.isAdmin &&
+                Objects.equals(id, user.id) &&
+                Objects.equals(email, user.email) &&
+                Objects.equals(userName, user.userName) &&
+                Objects.equals(pincode, user.pincode) &&
+                Objects.equals(
+                        createdAt != null ? createdAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                        user.createdAt != null ? user.createdAt.truncatedTo(ChronoUnit.SECONDS) : null) &&
+                Objects.equals(
+                        updatedAt != null ? updatedAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                        user.updatedAt != null ? user.updatedAt.truncatedTo(ChronoUnit.SECONDS) : null);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                id,
+                email,
+                userName,
+                pincode,
+                isBlocked,
+                isAdmin,
+                createdAt != null ? createdAt.truncatedTo(ChronoUnit.SECONDS) : null,
+                updatedAt != null ? updatedAt.truncatedTo(ChronoUnit.SECONDS) : null);
+    }
 
 }
