@@ -1,5 +1,6 @@
 package me.vse.fintrackserver.controller;
 
+import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -94,6 +95,7 @@ public class UserController {
             return ResponseEntity.ok(UserAuthResponse.builder()
                     .id(user.getId())
                     .email(user.getEmail())
+                    .hasPincode(!StringUtils.isBlank(user.getPincode()))
                     .userName(user.getUserName())
                     .isAdmin(user.isAdmin())
                     .isBlocked(user.isBlocked())
@@ -133,8 +135,8 @@ public class UserController {
             @Parameter(description = "User ID and pincode to verify", required = true) @RequestBody UserPincodeRequest request) {
         try {
             return ResponseEntity.ok(userService.verifyPinCode(
-                    UUID.fromString(request.getId()),
-                    request.getPincode()
+                request.getId(),
+                request.getPincode()
             ));
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());

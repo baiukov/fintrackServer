@@ -78,14 +78,16 @@ public class AccountService {
 
     @Transactional
     public Double getBalance(String id, LocalDateTime fromDate, LocalDateTime endDate) {
-        return getIncome(id, fromDate, endDate) + getExpense(id, fromDate, endDate);
+        Account account = checkAccount(id);
+
+        return account.getInitialAmount() + getIncome(id, fromDate, endDate) + getExpense(id, fromDate, endDate);
     }
 
     @Transactional
     public Double getIncome(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
 
-        AtomicReference<Double> initialAmount = new AtomicReference<>(account.getInitialAmount());
+        AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
         Consumer<Transaction> increaseConsumer = transaction -> {
             initialAmount.updateAndGet(v -> v + transaction.getAmount());
@@ -99,7 +101,7 @@ public class AccountService {
     public Double getExpense(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
 
-        AtomicReference<Double> initialAmount = new AtomicReference<>(account.getInitialAmount());
+        AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
         Consumer<Transaction> decreaseConsumer = transaction -> {
                 initialAmount.updateAndGet(v -> v - transaction.getAmount());

@@ -45,7 +45,7 @@ public class Group {
     @Column(name = "group_code", unique = true)
     private String code;
 
-    @Column(name = "is_removed", insertable = false)
+    @Column(name = "is_removed")
     private boolean isRemoved;
 
     @Column(name = "created_at")

@@ -14,6 +14,7 @@ public class UserAuthResponse {
     private String id;
     private String email;
     private String userName;
+    private boolean hasPincode;
     private boolean isBlocked;
     private boolean isAdmin;
 
