@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import me.vse.fintrackserver.rest.requests.StandingOrderRequest;
 import me.vse.fintrackserver.rest.requests.TransactionRequest;
 import me.vse.fintrackserver.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,33 +119,50 @@ public class TransactionController {
             @ApiResponse(responseCode = "409", description = "Conflict: transaction could not be deleted")
     })
     public ResponseEntity<?> delete(
-            @Parameter(description = "The ID of the transaction to delete", required = true) @RequestParam String transactionId
+            @Parameter(description = "The ID of the transaction to delete", required = true) @RequestParam String transactionId,
+            @Parameter(description = "The ID of the owner of the transaction", required = true) @RequestParam String userId
     ) {
         try {
-            return ResponseEntity.ok(transactionService.delete(transactionId));
+            return ResponseEntity.ok(transactionService.delete(transactionId, userId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
-    @PatchMapping("/updateStandingOrder")
+    @PatchMapping("/standingOrder/update")
     @Operation(summary = "Update Standing Order", description = "Update an existing standing order transaction.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Standing order successfully updated"),
             @ApiResponse(responseCode = "409", description = "Conflict: standing order could not be updated")
     })
     public ResponseEntity<?> updateStandingOrder(
-            @Parameter(description = "Updated details of the standing order transaction", required = true) @RequestBody TransactionRequest transactionRequest
+            @Parameter(description = "Updated details of the standing order transaction", required = true) @RequestBody StandingOrderRequest standingOrderRequest
     ) {
         try {
-            transactionService.updateStandingOrder(transactionRequest);
+            transactionService.updateStandingOrder(standingOrderRequest);
             return ResponseEntity.ok(HttpEntity.EMPTY);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
-    @DeleteMapping("/deleteStandingOrder")
+    @PostMapping("/standingOrder/create")
+    @Operation(summary = "Create Standing Order", description = "Create a new standing order for the transaction with the provided details.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Standing order successfully created"),
+            @ApiResponse(responseCode = "409", description = "Conflict: standing order could not be created")
+    })
+    public ResponseEntity<?> createStandingOrder(
+            @Parameter(description = "Details of the transaction to be created", required = true) @RequestBody StandingOrderRequest request
+    ) {
+        try {
+            return ResponseEntity.ok(transactionService.createStandingOrder(request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/standingOrder/delete")
     @Operation(summary = "Delete Standing Order", description = "Delete an existing standing order transaction by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Standing order successfully deleted"),
@@ -155,6 +173,23 @@ public class TransactionController {
     ) {
         try {
             transactionService.deleteStandingOrder(transactionId);
+            return ResponseEntity.ok(HttpEntity.EMPTY);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/standingOrder/get")
+    @Operation(summary = "Get Standing Order", description = "Get an existing standing order transaction by its ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Standing order successfully retrieved"),
+            @ApiResponse(responseCode = "409", description = "Conflict: standing order could not be retrieved")
+    })
+    public ResponseEntity<?> getStandingOrder(
+            @Parameter(description = "The ID of the standing order transaction to retrieve", required = true) @RequestParam String transactionId
+    ) {
+        try {
+            transactionService.getStandingOrder(transactionId);
             return ResponseEntity.ok(HttpEntity.EMPTY);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());

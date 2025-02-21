@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="03022025" author="Aleksei Baiukov">
+        <sql>
+            create table account_group_relation
+            (
+                account_id  VARCHAR2(127) not null,
+                group_id VARCHAR2(127) not null,
+                constraint PK_ACCOUNT_GROUP_RELATION primary key (account_id, group_id),
+                constraint FK_ACCOUNT_BELO_GROUPS foreign key (group_id)
+                    references Groups (id),
+                constraint FK_GROUP_HAS_ACCOUNTS foreign key (account_id)
+                    references Account (id)
+            );
+
+            create index account_belong_to_group_FK on account_group_relation (
+                                                                         group_id ASC
+                );
+
+            create index group_has_account_FK on account_group_relation (
+                                                                   user_id ASC
+                );
+        </sql>
+
+        <rollback>
+            drop index account_belong_to_group_FK;
+
+            drop index group_has_account_FK;
+
+            drop table account_group_relation cascade constraints;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -14,6 +14,7 @@ public class AccountDto {
     private String id;
     private String name;
     private AccountType type;
+    private String emoji;
     private Currency currency;
     private double initialAmount;
     private double interestRate;

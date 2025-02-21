@@ -33,10 +33,16 @@ public class AccountController {
     })
     public ResponseEntity<?> getBalance(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the balance calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the balance calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime endDate
     ) {
         return ResponseEntity.ok(accountService.getBalance(id, fromDate, endDate));
     }
@@ -49,10 +55,16 @@ public class AccountController {
     })
     public ResponseEntity<?> getNetWorth(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the net worth calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the net worth calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime endDate
 
     ) {
         return ResponseEntity.ok(accountService.getNetWorth(id, fromDate, endDate));
@@ -66,10 +78,15 @@ public class AccountController {
     })
     public ResponseEntity<?> getIncome(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the income calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the income calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")LocalDateTime endDate
     ) {
         return ResponseEntity.ok(accountService.getIncome(id, fromDate, endDate));
     }
@@ -82,10 +99,16 @@ public class AccountController {
     })
     public ResponseEntity<?> getExpense(
             @Parameter(description = "The ID of the account", required = true) @RequestParam String id,
+
             @Parameter(description = "Optional start date for the expense calculation")
-            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime fromDate,
+
             @Parameter(description = "Optional end date for the expense calculation")
-            @RequestParam(required = false) LocalDateTime endDate
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "MM-dd-yyyy HH:mm:ss")
+            LocalDateTime endDate
     ) {
         return ResponseEntity.ok(accountService.getExpense(id, fromDate, endDate));
     }
@@ -106,15 +129,44 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/retrieveAll")
+    @GetMapping("/retrieveAll")
     @Operation(summary = "Retrieve All Accounts", description = "Get all accounts for a specific user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
     })
     public ResponseEntity<?> retrieveAll(
             @Parameter(description = "User ID for which to retrieve accounts", required = true)
-            @RequestBody UserIdDto userId) {
-        return ResponseEntity.ok(accountService.retrieveAll(userId.getUserId()));
+            @RequestParam String userId) {
+        return ResponseEntity.ok(accountService.retrieveAll(userId));
+    }
+
+    @GetMapping("/retrieveAllWhereOwner")
+    @Operation(summary = "Retrieve All Accounts Where User Is Owner", description = "Get all accounts for a specific user, who is an owner.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
+    })
+    public ResponseEntity<?> retrieveAllWhereIsOwner(
+            @Parameter(description = "User ID for which to retrieve accounts", required = true)
+            @RequestParam String userId) {
+        return ResponseEntity.ok(accountService.retrieveAllWhereIsOwner(userId));
+    }
+
+    @GetMapping("/retrievaAllByName")
+    @Operation(summary = "Retrieve All Accounts by name and user id", description = "Get all accounts for a specific user with name filter.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
+    })
+    public ResponseEntity<?> retrieveAllByName(
+            @Parameter(description = "User ID for which to retrieve accounts", required = true)
+            @RequestParam String userId,
+
+            @Parameter(description = "Part of the account name, if present")
+            @RequestParam(required = false, defaultValue = "") String name,
+
+            @Parameter(description = "Limit of the found account list")
+            @RequestParam(required = false, defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok(accountService.retrieveAllByName(userId, name, limit));
     }
 
     @PatchMapping("/update")
@@ -125,6 +177,31 @@ public class AccountController {
     public ResponseEntity<?> update(
             @Parameter(description = "Updated details of the account", required = true)
             @RequestBody AccountDto request) {
-        return ResponseEntity.ok(accountService.update(request));
+
+        try {
+            return ResponseEntity.ok(accountService.update(request));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete")
+    @Operation(summary = "Delete Account", description = "Delete an existing account, if possible for user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Account successfully deleted"),
+            @ApiResponse(responseCode = "409", description = "User doesnt have permission")
+    })
+    public ResponseEntity<?> delete(
+            @Parameter(description = "ID of the owner of the account", required = true)
+            @RequestParam String userId,
+
+            @Parameter(description = "Account id", required = true)
+            @RequestParam String accountId
+    ) {
+        try {
+            return ResponseEntity.ok(accountService.delete(accountId, userId));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
     }
 }

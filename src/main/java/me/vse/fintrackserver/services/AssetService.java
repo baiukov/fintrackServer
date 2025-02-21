@@ -12,6 +12,7 @@ import me.vse.fintrackserver.model.Asset;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.AssetDto;
 import me.vse.fintrackserver.repositories.AssetRepository;
+import me.vse.fintrackserver.rest.requests.AssetAddRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import javax.naming.AuthenticationException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -41,7 +43,7 @@ public class AssetService {
     private AssetMapper assetMapper;
 
     @Transactional
-    public List<Asset> getAll(String accountId) {
+    public List<Asset> getAllByAccount(String accountId) {
         if (accountId == null) {
             throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
@@ -53,7 +55,23 @@ public class AssetService {
     }
 
     @Transactional
-    public Asset add(AssetDto assetDto) {
+    public List<Asset> getAll(String userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+        User user = entityManager.find(User.class, userId);
+        return user.getAccountUserRights()
+                .stream()
+                .filter(AccountUserRights::isOwner)
+                .map(AccountUserRights::getAccount)
+                .map(Account::getAssets)
+                .flatMap(List::stream)
+                .filter(asset -> !asset.isRemoved())
+                .toList();
+    }
+
+    @Transactional
+    public Asset add(AssetAddRequest assetDto) {
 
         if (assetDto.getName() == null) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_ASSET.name());
@@ -68,11 +86,10 @@ public class AssetService {
         Asset asset = Asset.builder()
                 .account(relatedAcc)
                 .name(assetDto.getName())
-                .color(assetDto.getColor())
                 .acquisitionPrice(assetDto.getAcquisitionPrice())
                 .depreciationPrice(assetDto.getDepreciationPrice())
-                .startDate(assetDto.getStartDate())
-                .endDate(assetDto.getEndDate())
+                .startDate(assetDto.getStartDateStr())
+                .endDate(assetDto.getEndDateStr())
                 .icon(assetDto.getIcon())
                 .build();
 
@@ -113,10 +130,28 @@ public class AssetService {
     }
 
     @Transactional
-    public void delete(String id) {
+    public void delete(String id, String userId) throws AuthenticationException {
         Asset asset = entityManager.find(Asset.class, id);
         if (asset == null) {
             throw new IllegalArgumentException(ErrorMessages.INCORRECT_ASSET.name());
+        }
+
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new AuthenticationException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        boolean doesUserHaveRights = user.getAccountUserRights().stream()
+                .map(AccountUserRights::getAccount)
+                .filter(not(Account::isRemoved))
+                .map(Account::getAssets)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .filter(not(Asset::isRemoved))
+                .anyMatch(currentAsset -> currentAsset.equals(asset));
+
+        if (!doesUserHaveRights) {
+            throw new AuthenticationException(ErrorMessages.USER_DOESNT_HAVE_RIGHTS.name());
         }
 
         asset.setRemoved(true);
@@ -136,10 +171,12 @@ public class AssetService {
         double assetUsageFullPrice = acquisitionPrice - depreciationPrice;
         LocalDate now = LocalDate.now();
 
-        boolean isAssetDepreciatedByDate = Duration.ofDays(DAYS.between(now, asset.getEndDate())).toDays() < 1;
+        boolean isAssetDepreciatedByDate = ChronoUnit.DAYS.between(asset.getStartDate(), now) < 1;
         if (isAssetDepreciatedByDate) return depreciationPrice;
 
-        long totalDaysOfUsage = Duration.ofDays(DAYS.between(asset.getStartDate(), asset.getEndDate())).toDays();
+        long totalDaysOfUsage = ChronoUnit.DAYS.between(asset.getStartDate(), asset.getEndDate());
+        if (totalDaysOfUsage == 0) return acquisitionPrice;
+
         double pricePerDateOfUsage = assetUsageFullPrice / totalDaysOfUsage;
 
         long daysBetweenStartAndNow = Duration.ofDays(DAYS.between(asset.getStartDate(), now)).toDays();

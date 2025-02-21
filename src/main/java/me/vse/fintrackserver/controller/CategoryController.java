@@ -79,10 +79,13 @@ public class CategoryController {
     })
     public ResponseEntity<?> delete(
             @Parameter(description = "The ID of the category to delete", required = true)
-            @RequestParam String categoryId
+            @RequestParam String categoryId,
+
+            @Parameter(description = "The ID of owner of the category", required = true)
+            @RequestParam String userId
     ) {
         try {
-            categoryService.delete(categoryId);
+            categoryService.delete(categoryId, userId);
             return ResponseEntity.ok(HttpEntity.EMPTY);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());

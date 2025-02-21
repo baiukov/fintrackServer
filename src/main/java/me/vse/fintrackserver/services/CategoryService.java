@@ -30,25 +30,30 @@ public class CategoryService {
     private CategoryRepository categoryRepository;
 
     @Transactional
-    public List<Asset> getAll(String userId) {
+    public List<Category> getAll(String userId) {
         if (userId == null) {
-            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
-        }
-        User user = entityManager.find(User.class, userId);
-        if (user == null) {
-            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
         }
 
-        // TODO User categories
-        return null;
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        return user.getCategories();
     }
 
     @Transactional
     public Category add(CategoryDto categoryDto) {
+        User user = entityManager.find(User.class, categoryDto.getUserId());
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
         Category category = Category.builder()
                 .name(categoryDto.getName())
-                .color(categoryDto.getColor())
                 .icon(categoryDto.getIcon())
+                .user(user)
                 .build();
         entityManager.persist(category);
         return category;
@@ -64,13 +69,23 @@ public class CategoryService {
         if (category == null) {
             throw new IllegalArgumentException(ErrorMessages.CATEGORY_DOESNT_EXIST.name());
         }
+
+        User user = entityManager.find(User.class, categoryDto.getUserId());
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        if (!user.getCategories().contains(category)) {
+            throw new IllegalArgumentException(ErrorMessages.CATEGORY_DOESNT_EXIST.name());
+        }
+
         categoryMapper.updateCategoryMapperFromDto(categoryDto, category);
-        entityManager.persist(category);
+        categoryRepository.save(category);
         return category;
     }
 
     @Transactional
-    public void delete(String id) {
+    public void delete(String id, String userId) {
         if (id == null) {
             throw new IllegalArgumentException(ErrorMessages.CATEGORY_DOESNT_EXIST.name());
         }
@@ -78,6 +93,16 @@ public class CategoryService {
         if (category == null) {
             throw new IllegalArgumentException(ErrorMessages.CATEGORY_DOESNT_EXIST.name());
         }
+
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        if (!user.getCategories().contains(category)) {
+            throw new IllegalArgumentException(ErrorMessages.CATEGORY_DOESNT_EXIST.name());
+        }
+
         categoryRepository.delete(category);
     }
 }

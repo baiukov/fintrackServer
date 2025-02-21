@@ -32,11 +32,23 @@ public class Group {
     @JsonIgnore
     private List<UserGroupRelation> groupUsersRelations;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "group")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<AccountGroupRelation> accountGroupsRelations;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id", referencedColumnName = "id")
+    private User owner;
+
     @Column(name = "group_name")
     private String name;
 
     @Column(name = "group_code", unique = true)
     private String code;
+
+    @Column(name = "is_removed")
+    private boolean isRemoved;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -45,6 +57,9 @@ public class Group {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(name = "removed_at")
+    private LocalDateTime removedAt;
 
     @Override
     public boolean equals(Object o) {

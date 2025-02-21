@@ -14,6 +14,7 @@ public class AccountAddRequest {
     private String name;
     private String type;
     private String currency;
+    private String emoji;
     private double initialAmount;
     private double interestRate = 1;
     private Long goalAmount = 0L;

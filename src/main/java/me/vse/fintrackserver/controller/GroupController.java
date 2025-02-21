@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import me.vse.fintrackserver.model.dto.AccountDto;
 import me.vse.fintrackserver.model.dto.GroupDto;
 import me.vse.fintrackserver.rest.requests.GroupRemoveUserRequest;
 import me.vse.fintrackserver.services.GroupService;
@@ -88,5 +89,18 @@ public class GroupController {
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
+    }
+
+    @PatchMapping("/update")
+    @Operation(summary = "Update Group", description = "Update an existing group with the provided details.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Group successfully updated"),
+            @ApiResponse(responseCode = "409", description = "Conflict has occurred")
+    })
+    public ResponseEntity<?> update(
+            @Parameter(description = "Updated details of the group", required = true)
+            @RequestBody GroupDto request
+    ) {
+        return ResponseEntity.ok(groupService.update(request));
     }
 }

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag; // Import Tag
 import me.vse.fintrackserver.model.dto.AssetDto;
+import me.vse.fintrackserver.rest.requests.AssetAddRequest;
 import me.vse.fintrackserver.services.AssetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,22 @@ public class AssetController {
     @Autowired
     private AssetService assetService;
 
+    @GetMapping("/getAllByAccount")
+    @Operation(summary = "Get All Assets For Account", description = "Retrieve all assets for a specific account.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved assets"),
+            @ApiResponse(responseCode = "409", description = "Conflict: account ID conflict")
+    })
+    public ResponseEntity<?> getAllByAccount(
+            @Parameter(description = "The ID of the account", required = true) @RequestParam String accountId
+    ) {
+        try {
+            return ResponseEntity.ok(assetService.getAllByAccount(accountId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/getAll")
     @Operation(summary = "Get All Assets", description = "Retrieve all assets for a specific account.")
     @ApiResponses(value = {
@@ -29,10 +46,10 @@ public class AssetController {
             @ApiResponse(responseCode = "409", description = "Conflict: account ID conflict")
     })
     public ResponseEntity<?> getAll(
-            @Parameter(description = "The ID of the account", required = true) @RequestParam String accountId
+            @Parameter(description = "The ID of the account", required = true) @RequestParam String userId
     ) {
         try {
-            return ResponseEntity.ok(assetService.getAll(accountId));
+            return ResponseEntity.ok(assetService.getAll(userId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
@@ -47,10 +64,10 @@ public class AssetController {
     })
     public ResponseEntity<?> add(
             @Parameter(description = "Details of the asset to be created", required = true)
-            @RequestBody AssetDto assetDto
+            @RequestBody AssetAddRequest assetAddRequest
     ) {
         try {
-            return ResponseEntity.ok(assetService.add(assetDto));
+            return ResponseEntity.ok(assetService.add(assetAddRequest));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {
@@ -81,17 +98,18 @@ public class AssetController {
         }
     }
 
-    @PatchMapping("/delete")
+    @DeleteMapping("/delete")
     @Operation(summary = "Delete Asset", description = "Delete an existing asset by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Asset successfully deleted"),
             @ApiResponse(responseCode = "409", description = "Conflict: asset could not be deleted")
     })
     public ResponseEntity<?> delete(
-            @Parameter(description = "The ID of the asset to delete", required = true) @RequestParam String id
+            @Parameter(description = "The ID of the asset to delete", required = true) @RequestParam String id,
+            @Parameter(description = "The ID of the asset owner", required = true) @RequestParam String userId
     ) throws AuthenticationException {
         try {
-            assetService.delete(id);
+            assetService.delete(id, userId);
             return ResponseEntity.ok(HttpStatus.OK);
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());

@@ -28,6 +28,10 @@ public class Category {
     @JsonIgnore
     private List<Transaction> transactions;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    private User user;
+
     @Column(name = "icon")
     private String icon;
 
