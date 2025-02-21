@@ -96,6 +96,9 @@ public class ExpenseCheck extends Advice {
                             List.of(Double.toString(avgExpenseLastMonth - avgExpenseBeforeLastMonth)));
                     adviceService.addResponse(adviceResponse);
                 }
+
+                request = PageRequest.of(i, batchSize);
+                users = userRepository.findAll(request);
             }
         }
     }

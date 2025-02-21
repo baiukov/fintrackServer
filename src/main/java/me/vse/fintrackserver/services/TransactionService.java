@@ -83,7 +83,6 @@ public class TransactionService {
                 .entrySet().stream()
                 .map(entry -> new TransactionByCategoryResponse(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
-
     }
 
     @Transactional
@@ -390,5 +389,33 @@ public class TransactionService {
             return transactionRepository.findAllByAccount(account);
         }
     }
+
+    @Scheduled(cron = "0 0 2 * * ?") // 2 AM
+    public void runStandingOrders() {
+        int batchSize = 50;
+        PageRequest pageRequest = PageRequest.of(0, batchSize);
+        Page<StandingOrder> standingOrders = standingOrderRepository.findAll(pageRequest);
+        int totalPages = standingOrders.getTotalPages();
+
+        for (int i = 0; i < totalPages; i++) {
+
+            for (StandingOrder standingOrder : standingOrders) {
+                Transaction transaction = standingOrder.getTransactionSample();
+                LocalDateTime now = LocalDateTime.now();
+                transaction.setExecutionDateTime(now);
+                transaction.setCreatedAt(now);
+                transaction.setUpdatedAt(now);
+                entityManager.persist(transaction);
+
+                standingOrder.setLastRepeatedAt(now);
+                standingOrderRepository.save(standingOrder);
+            }
+
+            pageRequest = PageRequest.of(i, batchSize);
+            standingOrders = standingOrderRepository.findAll(pageRequest);
+        }
+
+    }
+
 
 }

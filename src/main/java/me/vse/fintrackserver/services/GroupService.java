@@ -269,6 +269,7 @@ public class GroupService {
         }
 
         Group group = entityManager.find(Group.class, id);
+
         if (group == null) {
             throw new IllegalArgumentException(ErrorMessages.GROUP_DOESNT_EXIST.name());
         }
