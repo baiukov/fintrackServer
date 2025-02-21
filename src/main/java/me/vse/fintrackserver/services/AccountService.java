@@ -15,6 +15,7 @@ import me.vse.fintrackserver.model.dto.SimplifiedEntityDto;
 import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +57,7 @@ public class AccountService {
             initialAmount.updateAndGet(v -> v + amount);
         };
 
+
         account.getAssets().stream()
                 .filter(Objects::nonNull)
                 .filter(not(Asset::isRemoved))
@@ -93,6 +95,7 @@ public class AccountService {
             initialAmount.updateAndGet(v -> v + transaction.getAmount());
         };
 
+
         transactionService.getIncomeTransactions(account, fromDate, endDate).forEach(increaseConsumer);
         return initialAmount.get();
     }
@@ -106,6 +109,7 @@ public class AccountService {
         Consumer<Transaction> decreaseConsumer = transaction -> {
                 initialAmount.updateAndGet(v -> v - transaction.getAmount());
         };
+
 
         transactionService.getExpenseTransactions(account, fromDate, endDate).forEach(decreaseConsumer);
 
@@ -138,7 +142,7 @@ public class AccountService {
                 .emoji(accountRequest.getEmoji())
                 .initialAmount(accountRequest.getInitialAmount())
                 .interestRate(accountRequest.getInterestRate())
-                .alreadyPaidAmount(accountRequest.getAlreadyPaidAmount())
+                .alreadyPaidAmount(Double.valueOf(accountRequest.getAlreadyPaidAmount()))
                 .build();
 
         entityManager.persist(account);

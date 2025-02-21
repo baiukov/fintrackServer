@@ -1,10 +1,10 @@
 package me.vse.fintrackserver.services;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
-import me.vse.fintrackserver.enums.Frequencies;
 import me.vse.fintrackserver.enums.TransactionTypes;
 import me.vse.fintrackserver.mappers.StandingOrderMapper;
 import me.vse.fintrackserver.model.*;
@@ -15,6 +15,7 @@ import me.vse.fintrackserver.rest.requests.TransactionRequest;
 import me.vse.fintrackserver.rest.responses.TransactionByCategoryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,13 +23,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
 public class TransactionService {
 
     @Autowired
@@ -46,6 +45,17 @@ public class TransactionService {
     @Autowired
     @Lazy
     private AccountService accountService;
+
+    public TransactionService(EntityManager entityManager, TransactionRepository transactionRepository,
+                              StandingOrderRepository standingOrderRepository, StandingOrderMapper standingOrderMapper,
+                              @Lazy AccountService accountService)
+    {
+        this.entityManager = entityManager;
+        this.transactionRepository = transactionRepository;
+        this.standingOrderRepository = standingOrderRepository;
+        this.standingOrderMapper = standingOrderMapper;
+        this.accountService = accountService;
+    }
 
     @Transactional
     public List<Transaction> findAllByAccount(String id,
@@ -176,6 +186,7 @@ public class TransactionService {
         if (user == null) {
             throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
         }
+
 
         if (accountService.retrieveAll(userId).stream()
                         .map(Account::getTransactions)

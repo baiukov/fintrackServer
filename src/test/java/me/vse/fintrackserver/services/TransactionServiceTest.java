@@ -50,7 +50,7 @@ public class TransactionServiceTest {
         standingOrderRepository = EasyMock.mock(StandingOrderRepository.class);
         standingOrderMapper = EasyMock.mock(StandingOrderMapper.class);
         transactionService = new TransactionService(entityManager, transactionRepository,
-                standingOrderRepository, standingOrderMapper);
+                standingOrderRepository, standingOrderMapper, null);
     }
 
     private Stream<Arguments> getCreateTransactionScenarios() {
@@ -1247,12 +1247,12 @@ public class TransactionServiceTest {
     public void addStandingOrderTest(TransactionRequest request, StandingOrder expected) {
         if (expected == null) {
             replay(entityManager);
-            transactionService.addStandingOrder(null, request);
+            transactionService.createStandingOrder(null, request);
             verify(entityManager);
         } else {
             entityManager.persist(expected);
             replay(entityManager);
-            transactionService.addStandingOrder(expected.getTransactionSample(), request);
+            transactionService.createStandingOrder(expected.getTransactionSample(), request);
             verify(entityManager);
         }
 

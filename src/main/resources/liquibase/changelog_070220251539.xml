@@ -12,14 +12,13 @@
                 id             VARCHAR2(127) not null,
                 account_id     VARCHAR2(127) not null,
                 category_id    VARCHAR2(127),
+                total_income   NUMBER not null,
+                total_expense  NUMBER not null,
 
-
-                transaction_id VARCHAR2(127) not null,
-                category_id    VARCHAR2(127) not null,
-                constraint PK_TRANSACTIONS_CATEGORIES primary key (transaction_id, category_id),
-                constraint FK_TRANSACT_CATEGORIE_TRANSACT foreign key (transaction_id)
-                    references Transaction (id),
-                constraint FK_TRANSACT_TRANSACTI_CATEGORI foreign key (category_id)
+                constraint PK_TRANSACTIONS_CATEGORIESA primary key (account_id, category_id),
+                constraint FK_ACCOUNT_CATEGORIEA foreign key (account_id)
+                    references Account (id),
+                constraint FK_CATEGORI_AGGREGATION_TRANSACT foreign key (category_id)
                     references Categories (id)
             );
         </sql>
