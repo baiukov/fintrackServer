@@ -1,5 +1,6 @@
 package me.vse.fintrackserver.advice;
 
+import jakarta.transaction.Transactional;
 import lombok.*;
 import me.vse.fintrackserver.enums.AdviceMessages;
 import me.vse.fintrackserver.enums.Frequencies;
@@ -7,9 +8,11 @@ import me.vse.fintrackserver.model.*;
 import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
 import me.vse.fintrackserver.rest.responses.AdviceResponse;
+import me.vse.fintrackserver.rest.responses.TransactionByCategoryResponse;
 import me.vse.fintrackserver.services.AdviceService;
 import me.vse.fintrackserver.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -45,6 +48,7 @@ public class ExpenseByCategoryCheck extends Advice {
     private int dayOfExecution = 1;
 
     @Override
+    @Transactional
     public void perform() {
         int batchSize = 20;
         int pageNumber = 0;
@@ -129,12 +133,11 @@ public class ExpenseByCategoryCheck extends Advice {
         }
     }
 
-    private Map<Category, Double> getAverageCategoriesExpenses(Map<Category, List<Transaction>> expenses) {
-        return expenses.entrySet()
-                .stream()
+    private Map<Category, Double> getAverageCategoriesExpenses(List<TransactionByCategoryResponse> expenses) {
+        return expenses.stream()
                 .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue()
+                        TransactionByCategoryResponse::getCategory,
+                        entry -> entry.getTransactions()
                                 .stream()
                                 .mapToDouble(Transaction::getAmount)
                                 .average()

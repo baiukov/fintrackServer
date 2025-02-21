@@ -5,6 +5,7 @@ import me.vse.fintrackserver.advice.ExpenseCheck;
 import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.rest.responses.AdviceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,7 @@ public class AdviceService {
 
     @Autowired
     ExpenseByCategoryCheck expenseByCategoryCheck;
+
     @Autowired
     ExpenseCheck expenseCheck;
 

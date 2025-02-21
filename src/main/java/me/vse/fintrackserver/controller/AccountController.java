@@ -10,6 +10,7 @@ import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import me.vse.fintrackserver.model.dto.UserIdDto;
 import me.vse.fintrackserver.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 public class AccountController {
 
     @Autowired
+    @Lazy
     private AccountService accountService;
 
     @GetMapping("/getBalance")
