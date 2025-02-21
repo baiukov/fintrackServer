@@ -5,13 +5,16 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
+import me.vse.fintrackserver.model.Category;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.SimplifiedEntityDto;
+import me.vse.fintrackserver.repositories.CategoryRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +29,9 @@ public class UserService {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Transactional
     public List<User> getAll(int pageSize, int pageNumber) {
@@ -68,6 +74,21 @@ public class UserService {
                 .build();
 
         entityManager.persist(user);
+
+        List<Category> categories = List.of(
+                Category.builder().icon("🛒").name("Groceries").color("#FF5733").user(user).build(),
+                Category.builder().icon("🍽️").name("Dining Out").color("#33FF57").user(user).build(),
+                Category.builder().icon("🚗").name("Transportation").color("#3357FF").user(user).build(),
+                Category.builder().icon("❤️").name("Health").color("#FF33A1").user(user).build(),
+                Category.builder().icon("🎬").name("Entertainment").color("#FFBB33").user(user).build(),
+                Category.builder().icon("💼").name("Work").color("#A133FF").user(user).build(),
+                Category.builder().icon("🏠").name("Rent").color("#33FFF5").user(user).build(),
+                Category.builder().icon("📚").name("Education").color("#F533FF").user(user).build(),
+                Category.builder().icon("🎁").name("Gifts").color("#33FFA1").user(user).build(),
+                Category.builder().icon("✈️").name("Travel").color("#FF5733").user(user).build()
+        );
+
+        categoryRepository.saveAll(categories);
         return user;
     }
 
