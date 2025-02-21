@@ -109,7 +109,6 @@ public class GroupService {
                 .name(groupDto.getName())
                 .isRemoved(false)
                 .owner(admin)
-                .code("1234")
                 .code(generateGroupCode(groupDto.getName()))
                 .build();
 
@@ -271,8 +270,6 @@ public class GroupService {
 
         Group group = entityManager.find(Group.class, id);
 
-      public void delete(String groupId) {
-        Group group = entityManager.find(Group.class, groupId);
         if (group == null) {
             throw new IllegalArgumentException(ErrorMessages.GROUP_DOESNT_EXIST.name());
         }
@@ -284,6 +281,5 @@ public class GroupService {
         group.setRemoved(true);
         group.setRemovedAt(LocalDateTime.now());
         groupRepository.save(group);
-        groupRepository.delete(group);
     }
 }

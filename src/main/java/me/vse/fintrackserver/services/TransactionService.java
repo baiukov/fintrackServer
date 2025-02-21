@@ -15,7 +15,6 @@ import me.vse.fintrackserver.rest.requests.TransactionRequest;
 import me.vse.fintrackserver.rest.responses.TransactionByCategoryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -84,12 +83,6 @@ public class TransactionService {
                 .entrySet().stream()
                 .map(entry -> new TransactionByCategoryResponse(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
-
-        return transactionSet.stream().collect(Collectors.groupingBy(transaction ->
-                Optional.ofNullable(transaction.getCategory())
-                        .orElse(Category.builder().name("Other").build())
-                )
-        );
     }
 
     @Transactional
@@ -297,20 +290,8 @@ public class TransactionService {
     }
 
     @Transactional
-    public void addStandingOrder(Transaction sample, TransactionRequest transactionRequest) {
-        Frequencies frequency = transactionRequest.getFrequency();
-        if (frequency == null || sample == null) return;
-        StandingOrder standingOrder = StandingOrder.builder()
-                .transactionSample(sample)
-                .frequency(frequency)
-                .remindDaysBefore(transactionRequest.getRemindDaysBefore())
-                .build();
-        entityManager.persist(standingOrder);
-    }
-
-    @Transactional
-    public void updateStandingOrder(TransactionRequest transactionRequest) {
-        String transactionId = transactionRequest.getId();
+    public void updateStandingOrder(StandingOrderRequest standingOrderRequest) {
+        String transactionId = standingOrderRequest.getTransactionId();
         if (transactionId == null) {
             throw new IllegalArgumentException(ErrorMessages.TRANSACTION_DOESNT_EXIST.name());
         }

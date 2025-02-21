@@ -90,8 +90,6 @@ public class AssetService {
                 .depreciationPrice(assetDto.getDepreciationPrice())
                 .startDate(assetDto.getStartDateStr())
                 .endDate(assetDto.getEndDateStr())
-                .startDate(assetDto.getStartDate())
-                .endDate(assetDto.getEndDate())
                 .icon(assetDto.getIcon())
                 .build();
 
@@ -179,10 +177,6 @@ public class AssetService {
         long totalDaysOfUsage = ChronoUnit.DAYS.between(asset.getStartDate(), asset.getEndDate());
         if (totalDaysOfUsage == 0) return acquisitionPrice;
 
-        boolean isAssetDepreciatedByDate = Duration.ofDays(DAYS.between(now, asset.getEndDate())).toDays() < 1;
-        if (isAssetDepreciatedByDate) return depreciationPrice;
-
-        long totalDaysOfUsage = Duration.ofDays(DAYS.between(asset.getStartDate(), asset.getEndDate())).toDays();
         double pricePerDateOfUsage = assetUsageFullPrice / totalDaysOfUsage;
 
         long daysBetweenStartAndNow = Duration.ofDays(DAYS.between(asset.getStartDate(), now)).toDays();
