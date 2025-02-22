@@ -47,6 +47,9 @@ public class AccountService {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
+    private TransactionAggregationService transactionAggregationService;
+
     @Transactional
     public Double getNetWorth(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
@@ -82,12 +85,18 @@ public class AccountService {
     public Double getBalance(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
 
+        Double savedTotal = transactionAggregationService.getTotal(id);
+        if (savedTotal != null) return savedTotal;
+
         return account.getInitialAmount() + getIncome(id, fromDate, endDate) + getExpense(id, fromDate, endDate);
     }
 
     @Transactional
     public Double getIncome(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
+
+        Double savedIncome = transactionAggregationService.getIncome(id);
+        if (savedIncome != null) return savedIncome;
 
         AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
@@ -103,6 +112,9 @@ public class AccountService {
     @Transactional
     public Double getExpense(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
+
+        Double savedExpense = transactionAggregationService.getExpense(id);
+        if (savedExpense != null) return savedExpense;
 
         AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
