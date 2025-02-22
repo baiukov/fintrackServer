@@ -33,7 +33,6 @@ public class TinkService {
         return url + "?client_id=" + clientId +
                 "&redirect_uri=" + redirectUri +
                 "&scope=accounts:read,transactions:read" +
-                "&market=EU" +
                 "&locale=en_US";
     }
 
@@ -56,7 +55,7 @@ public class TinkService {
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Ошибка запроса: " + response);
+                throw new IOException("Response error: " + response);
             }
             ObjectMapper objectMapper = new ObjectMapper();
             String responseBody = response.body().string();
