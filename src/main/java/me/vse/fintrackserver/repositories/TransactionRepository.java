@@ -43,4 +43,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
 
     @Query("select t from Transaction t where (t.account = :account or t.receiver = :account)")
     List<Transaction> findAllPagesByAccount(@Param("account") Account account, Pageable pageable);
+
+    @Query("""
+        SELECT t.account, t.category, 
+               SUM(CASE WHEN t.type = 'INCOME' THEN t.amount ELSE 0 END) AS totalIncome, 
+               SUM(CASE WHEN t.type = 'EXPENSE' THEN t.amount ELSE 0 END) AS totalExpense
+        FROM Transaction t
+        WHERE t.executionDateTime >= :twoDaysAgo
+        GROUP BY t.account, t.category
+    """)
+    List<Object[]> aggregateTransactionsForLastTwoDays(@Param("twoDaysAgo") LocalDateTime twoDaysAgo);
+
 }
