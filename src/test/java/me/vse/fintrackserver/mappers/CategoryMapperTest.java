@@ -52,30 +52,25 @@ public class CategoryMapperTest {
                 Arguments.of(
                         CategoryDto.builder()
                                 .name("food")
-                                .color("brown")
                                 .icon("bread.svg")
                                 .build(),
                         Category.builder().id("catId").build(),
                         Category.builder().id("catId")
                                 .name("food")
-                                .color("brown")
                                 .icon("bread.svg")
                                 .build()
                 ),
                 Arguments.of(
                         CategoryDto.builder()
                                 .name("groceries")
-                                .color("yellow")
                                 .icon("milk.svg")
                                 .build(),
                     Category.builder().id("assetId")
                                 .name("food")
-                                .color("brown")
                                 .icon("bread.svg")
                                 .build(),
                         Category.builder().id("assetId")
                                 .name("groceries")
-                                .color("yellow")
                                 .icon("milk.svg")
                                 .build()
                 )

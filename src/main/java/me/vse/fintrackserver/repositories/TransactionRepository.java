@@ -45,9 +45,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     List<Transaction> findAllPagesByAccount(@Param("account") Account account, Pageable pageable);
 
     @Query("""
-        SELECT t.account, t.category, 
-               SUM(CASE WHEN t.type = 'INCOME' THEN t.amount ELSE 0 END) AS totalIncome, 
-               SUM(CASE WHEN t.type = 'EXPENSE' THEN t.amount ELSE 0 END) AS totalExpense
+        SELECT t.account, t.category,
+               SUM(CASE WHEN t.type = me.vse.fintrackserver.enums.TransactionTypes.INCOME THEN t.amount ELSE 0 END) AS totalIncome,
+               SUM(CASE WHEN t.type = me.vse.fintrackserver.enums.TransactionTypes.EXPENSE THEN t.amount ELSE 0 END) AS totalExpense
         FROM Transaction t
         WHERE t.executionDateTime >= :twoDaysAgo
         GROUP BY t.account, t.category

@@ -8,6 +8,7 @@ import me.vse.fintrackserver.mappers.StandingOrderMapper;
 import me.vse.fintrackserver.model.*;
 import me.vse.fintrackserver.repositories.StandingOrderRepository;
 import me.vse.fintrackserver.repositories.TransactionRepository;
+import me.vse.fintrackserver.rest.requests.StandingOrderRequest;
 import me.vse.fintrackserver.rest.requests.TransactionRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.easymock.EasyMock;
@@ -1173,30 +1174,30 @@ public class TransactionServiceTest {
 
         if (exception != null) {
             IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                    () -> transactionService.delete(id));
+                    () -> transactionService.delete(id, "userId"));
             assertEquals(exception.name(), thrown.getMessage());
         } else {
-            transactionService.delete(id);
+            transactionService.delete(id, "userId");
             verify(entityManager, transactionRepository);
         }
     }
 
     private Stream<Arguments> getAddStandingOrderScenarios() {
         return Stream.of(
-                Arguments.of(TransactionRequest.builder().build(), null),
+                Arguments.of(StandingOrderRequest.builder().build(), null),
                 Arguments.of(
-                        TransactionRequest.builder().frequency(Frequencies.DAILY).build(),
+                        StandingOrderRequest.builder().frequency(Frequencies.DAILY).build(),
                         null
                 ),
                 Arguments.of(
-                        TransactionRequest.builder().frequency(Frequencies.DAILY).build(),
+                        StandingOrderRequest.builder().frequency(Frequencies.DAILY).build(),
                         StandingOrder.builder()
                                 .transactionSample(Transaction.builder().id("transacId").build())
                                 .frequency(Frequencies.DAILY)
                                 .build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder()
+                        StandingOrderRequest.builder()
                                 .frequency(Frequencies.MONTHLY)
                                 .remindDaysBefore(5)
                                 .build(),
@@ -1207,7 +1208,7 @@ public class TransactionServiceTest {
                                 .build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder()
+                        StandingOrderRequest.builder()
                                 .frequency(Frequencies.WEEKLY)
                                 .remindDaysBefore(1)
                                 .build(),
@@ -1218,7 +1219,7 @@ public class TransactionServiceTest {
                                 .build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder()
+                        StandingOrderRequest.builder()
                                 .frequency(Frequencies.QUARTERLY)
                                 .remindDaysBefore(30)
                                 .build(),
@@ -1229,7 +1230,7 @@ public class TransactionServiceTest {
                                 .build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder()
+                        StandingOrderRequest.builder()
                                 .frequency(Frequencies.YEARLY)
                                 .remindDaysBefore(30)
                                 .build(),
@@ -1244,15 +1245,15 @@ public class TransactionServiceTest {
 
     @ParameterizedTest(name = "Test add standing order. Given request: {0}. Should return standing order: {1}")
     @MethodSource("getAddStandingOrderScenarios")
-    public void addStandingOrderTest(TransactionRequest request, StandingOrder expected) {
+    public void addStandingOrderTest(StandingOrderRequest request, StandingOrder expected) {
         if (expected == null) {
             replay(entityManager);
-            transactionService.createStandingOrder(null, request);
+            transactionService.createStandingOrder(request);
             verify(entityManager);
         } else {
             entityManager.persist(expected);
             replay(entityManager);
-            transactionService.createStandingOrder(expected.getTransactionSample(), request);
+            transactionService.createStandingOrder(request);
             verify(entityManager);
         }
 
@@ -1260,14 +1261,14 @@ public class TransactionServiceTest {
 
     private Stream<Arguments> updateStandingOrderScenarios() {
         return Stream.of(
-                Arguments.of(new TransactionRequest(),
+                Arguments.of(new StandingOrderRequest(),
                         new Transaction(),
                         ErrorMessages.TRANSACTION_DOESNT_EXIST),
-                Arguments.of(TransactionRequest.builder().id("").build(),
+                Arguments.of(StandingOrderRequest.builder().transactionId("").build(),
                         new Transaction(),
                         ErrorMessages.TRANSACTION_DOESNT_EXIST),
-                Arguments.of(TransactionRequest.builder()
-                                .id("transactionId")
+                Arguments.of(StandingOrderRequest.builder()
+                                .transactionId("transactionId")
                                 .frequency(Frequencies.DAILY)
                                 .build(),
                         Transaction.builder()
@@ -1278,8 +1279,8 @@ public class TransactionServiceTest {
                                         .build())
                                 .build(),
                         null),
-                Arguments.of(TransactionRequest.builder()
-                                .id("transactionId")
+                Arguments.of(StandingOrderRequest.builder()
+                                .transactionId("transactionId")
                                 .frequency(Frequencies.DAILY)
                                 .remindDaysBefore(5)
                                 .build(),
@@ -1298,10 +1299,10 @@ public class TransactionServiceTest {
     @ParameterizedTest(name = "Test update standing order. Given request: {0}, transaction expected: {1}. " +
             "Should throw exception {2} or complete update")
     @MethodSource("updateStandingOrderScenarios")
-    public void updateStandingOrderTest(TransactionRequest request, Transaction expected, ErrorMessages exception) {
+    public void updateStandingOrderTest(StandingOrderRequest request, Transaction expected, ErrorMessages exception) {
         standingOrderMapper.updateStandingOrderFromRequest(request, expected.getStandingOrder());
         expect(standingOrderRepository.save(expected.getStandingOrder())).andReturn(expected.getStandingOrder());
-        expect(entityManager.find(Transaction.class, request.getId()))
+        expect(entityManager.find(Transaction.class, request.getTransactionId()))
                 .andReturn(Strings.isBlank(expected.getId()) ? null : expected);
         replay(standingOrderMapper, standingOrderRepository, entityManager);
 

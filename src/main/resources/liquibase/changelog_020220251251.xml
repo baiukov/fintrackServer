@@ -22,9 +22,6 @@
                                                                          group_id ASC
                 );
 
-            create index group_has_account_FK on account_group_relation (
-                                                                   user_id ASC
-                );
         </sql>
 
         <rollback>

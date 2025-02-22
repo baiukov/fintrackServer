@@ -5,6 +5,7 @@ import me.vse.fintrackserver.enums.Frequencies;
 import me.vse.fintrackserver.model.Category;
 import me.vse.fintrackserver.model.StandingOrder;
 import me.vse.fintrackserver.model.dto.CategoryDto;
+import me.vse.fintrackserver.rest.requests.StandingOrderRequest;
 import me.vse.fintrackserver.rest.requests.TransactionRequest;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,22 +36,22 @@ public class StandingOrderMapperTest {
     private Stream<Arguments> getMapperScenarios() {
         return Stream.of(
                 Arguments.of(
-                        TransactionRequest.builder().frequency(Frequencies.DAILY).build(),
+                        StandingOrderRequest.builder().frequency(Frequencies.DAILY).build(),
                         StandingOrder.builder().id("standOrdId").build(),
                         StandingOrder.builder().id("standOrdId").frequency(Frequencies.DAILY).build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder().build(),
+                        StandingOrderRequest.builder().build(),
                         StandingOrder.builder().id("standOrdId").frequency(Frequencies.DAILY).build(),
                         StandingOrder.builder().id("standOrdId").frequency(Frequencies.DAILY).build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder().frequency(Frequencies.WEEKLY).build(),
+                        StandingOrderRequest.builder().frequency(Frequencies.WEEKLY).build(),
                         StandingOrder.builder().id("standOrdId").frequency(Frequencies.DAILY).build(),
                         StandingOrder.builder().id("standOrdId").frequency(Frequencies.WEEKLY).build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder()
+                        StandingOrderRequest.builder()
                                 .frequency(Frequencies.DAILY)
                                 .remindDaysBefore(3)
                                 .build(),
@@ -61,7 +62,7 @@ public class StandingOrderMapperTest {
                                 .build()
                 ),
                 Arguments.of(
-                        TransactionRequest.builder()
+                        StandingOrderRequest.builder()
                                 .frequency(Frequencies.MONTHLY)
                                 .remindDaysBefore(10)
                                 .build(),
@@ -81,8 +82,8 @@ public class StandingOrderMapperTest {
     @ParameterizedTest(name = "Standing order mapper test. Given request: {0}, old standing order: {1}. " +
             "Should return standing order {2}")
     @MethodSource("getMapperScenarios")
-    public void updateStandingOrderFromRequestTest(TransactionRequest request, StandingOrder oldStandingOrder,
-                                       StandingOrder newStandingOrder) {
+    public void updateStandingOrderFromRequestTest(StandingOrderRequest request, StandingOrder oldStandingOrder,
+                                                   StandingOrder newStandingOrder) {
         standingOrderMapper.updateStandingOrderFromRequest(request, oldStandingOrder);
         assertEquals(newStandingOrder, oldStandingOrder);
     }
