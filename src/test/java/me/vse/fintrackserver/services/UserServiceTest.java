@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import me.vse.fintrackserver.ATest;
 import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.model.User;
+import me.vse.fintrackserver.repositories.CategoryRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,12 +31,14 @@ public class UserServiceTest extends ATest {
     private EntityManager entityManager;
     private UserRepository userRepository;
     private UserService userService;
+    private CategoryRepository categoryRepository;
 
     @BeforeEach
     public void setUp() {
         entityManager = EasyMock.mock(EntityManager.class);
         userRepository = EasyMock.mock(UserRepository.class);
-        userService = new UserService(userRepository, entityManager);
+        categoryRepository = EasyMock.mock(CategoryRepository.class);
+        userService = new UserService(userRepository, entityManager, categoryRepository);
     }
 
     private Stream<Arguments> getRegisterUserScenarios() {

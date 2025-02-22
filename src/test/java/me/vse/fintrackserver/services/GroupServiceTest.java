@@ -6,6 +6,7 @@ import me.vse.fintrackserver.model.Group;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.UserGroupRelation;
 import me.vse.fintrackserver.model.dto.GroupDto;
+import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.repositories.GroupRepository;
 import me.vse.fintrackserver.repositories.UserGroupRelationRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
@@ -20,6 +21,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -36,6 +38,7 @@ public class GroupServiceTest {
     private UserRepository userRepository;
     private GroupRepository groupRepository;
     private UserGroupRelationRepository userGroupRelationRepository;
+    private AccountRepository accountRepository;
 
 
     @BeforeEach
@@ -44,7 +47,9 @@ public class GroupServiceTest {
         userRepository = EasyMock.mock(UserRepository.class);
         groupRepository = EasyMock.mock(GroupRepository.class);
         userGroupRelationRepository = EasyMock.mock(UserGroupRelationRepository.class);
-        groupService = new GroupService(entityManager, userRepository, groupRepository, userGroupRelationRepository);
+        accountRepository = EasyMock.mock(AccountRepository.class);
+        groupService = new GroupService(entityManager, userRepository, groupRepository, accountRepository,
+                userGroupRelationRepository);
     }
 
     private Stream<Arguments> getAddScenarios() {
@@ -93,7 +98,8 @@ public class GroupServiceTest {
                 null,
                 group.getName(),
                 admin == null ? null : admin.getId(),
-                memberIds
+                memberIds,
+                new ArrayList<>()
         );
 
         expect(entityManager.find(User.class, groupDto.getAdminId())).andReturn(admin);
@@ -142,10 +148,10 @@ public class GroupServiceTest {
 
         if (message != null) {
             IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                    () -> groupService.delete(group.getId()));
+                    () -> groupService.delete(group.getId(), "userId"));
             assertEquals(message.name(), thrown.getMessage());
         } else {
-            groupService.delete(group.getId());
+            groupService.delete(group.getId(), "userId");
             verify(entityManager, groupRepository);
         }
     }

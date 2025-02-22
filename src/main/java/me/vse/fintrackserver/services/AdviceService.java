@@ -1,6 +1,6 @@
 package me.vse.fintrackserver.services;
 
-import me.vse.fintrackserver.advice.ExpenseByCategoryCheck;
+//import me.vse.fintrackserver.advice.ExpenseByCategoryCheck;
 import me.vse.fintrackserver.advice.ExpenseCheck;
 import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.rest.responses.AdviceResponse;
@@ -32,15 +32,15 @@ public class AdviceService {
         thread.start();
     }
 
-    @Autowired
-    ExpenseByCategoryCheck expenseByCategoryCheck;
+//    @Autowired
+//    ExpenseByCategoryCheck expenseByCategoryCheck;
 
     @Autowired
     ExpenseCheck expenseCheck;
 
     private void performAdviceChecks() {
 
-        expenseByCategoryCheck.perform();
+//        expenseByCategoryCheck.perform();
 
     }
 

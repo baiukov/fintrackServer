@@ -56,14 +56,6 @@
                     references Account (id)
             );
 
-            create index account_belong_to_group_FK on Account_user_rights (
-                                                                            user_id ASC
-                );
-
-            create index group_has_account_FK on Account_user_rights (
-                                                                      account_id ASC
-                );
-
             create table Assets
             (
                 id                VARCHAR2(127) not null,
@@ -110,7 +102,7 @@
                 removed_at     DATE,
                 constraint PK_GROUPS primary key (id),
                 constraint FK_USER_HAS_ACCOUNT foreign key (owner_id)
-                    references User (id)
+                    references Users (id)
             );
 
             create table Transaction

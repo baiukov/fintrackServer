@@ -69,7 +69,6 @@
             COMMENT ON COLUMN transaction.is_removed IS 'If transaction has been removed';
             COMMENT ON COLUMN transaction.removed_at IS 'A date when transaction has been removed';
             COMMENT ON COLUMN transaction.created_at IS 'A date when transaction has been created';
-            COMMENT ON COLUMN transaction.icon IS 'A user desired icon';
 
             COMMENT ON COLUMN users.id IS 'Identification number of an user';
             COMMENT ON COLUMN users.email IS 'Email adress provided by user';

@@ -54,14 +54,12 @@ public class CategoryServiceTest {
     }, delimiter = '|')
     public void addTest(String name, String color, String icon) {
         CategoryDto categoryDto = CategoryDto.builder()
-                .color(color)
                 .name(name)
                 .icon(icon)
                 .build();
 
         Category expectedCategory = Category.builder()
                 .name(name)
-                .color(color)
                 .icon(icon)
                 .build();
         entityManager.persist(expectedCategory);
@@ -99,7 +97,6 @@ public class CategoryServiceTest {
                 .id(expected.getId())
                 .icon(expected.getIcon())
                 .name(expected.getName())
-                .color(expected.getColor())
                 .build();
 
         expect(entityManager.find(Category.class, categoryDto.getId()))
@@ -128,10 +125,10 @@ public class CategoryServiceTest {
 
         if (exceptionMessage != null) {
             IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                    () -> categoryService.delete(expected.getId()));
+                    () -> categoryService.delete(expected.getId(), "userId"));
             assertEquals(exceptionMessage.name(), thrown.getMessage());
         } else {
-            categoryService.delete(expected.getId());
+            categoryService.delete(expected.getId(), "userId");
             verify(entityManager, categoryRepository);
         }
     }

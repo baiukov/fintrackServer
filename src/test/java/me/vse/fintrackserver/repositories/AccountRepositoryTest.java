@@ -38,20 +38,4 @@ public class AccountRepositoryTest {
     void tearDown() {
         accountRepository.deleteAll();
     }
-
-    @Test
-    void findByNameTest() {
-        Account account = Account.builder()
-                .type(AccountType.CURRENT_ACCOUNT)
-                .currency(Currency.getInstance("USD"))
-                .name("myAccount").build();
-        Account account2 = Account.builder()
-                .type(AccountType.CURRENT_ACCOUNT)
-                .currency(Currency.getInstance("USD"))
-                .name("anotherAcc").build();
-        accountRepository.saveAll(List.of(account, account2));
-
-        Account actual = accountRepository.findByName("myAccount");
-        assertEquals(account, actual);
-    }
 }

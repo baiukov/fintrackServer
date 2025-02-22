@@ -1,8 +1,6 @@
 package me.vse.fintrackserver.rest.requests;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import me.vse.fintrackserver.enums.Frequencies;
 import me.vse.fintrackserver.enums.TransactionTypes;
 
@@ -11,6 +9,8 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class StandingOrderRequest {
 
     private String userId;

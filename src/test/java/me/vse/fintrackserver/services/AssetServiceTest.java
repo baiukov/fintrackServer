@@ -9,6 +9,7 @@ import me.vse.fintrackserver.model.Asset;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.AssetDto;
 import me.vse.fintrackserver.repositories.AssetRepository;
+import me.vse.fintrackserver.rest.requests.AssetAddRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,27 +85,26 @@ public class AssetServiceTest {
     @ParameterizedTest(name = "Test asset add. Given asset: {0}. Should save or return expetion: {1}")
     @MethodSource("getAddScenarios")
     public void addTest(Asset asset, String exception) {
-        AssetDto assetDto = AssetDto.builder()
+        AssetAddRequest request = AssetAddRequest.builder()
                 .accountId(asset.getAccount() == null ? null : asset.getAccount().getId())
                 .name(asset.getName())
-                .endDate(asset.getEndDate())
-                .startDate(asset.getStartDate())
+                .endDateStr(asset.getEndDate())
+                .startDateStr(asset.getStartDate())
                 .acquisitionPrice(asset.getAcquisitionPrice())
                 .depreciationPrice(asset.getDepreciationPrice())
-                .color(asset.getColor())
                 .icon(asset.getIcon())
                 .build();
 
-        expect(entityManager.find(Account.class, assetDto.getAccountId())).andReturn(asset.getAccount());
+        expect(entityManager.find(Account.class, request.getAccountId())).andReturn(asset.getAccount());
         entityManager.persist(anyObject(Account.class));
         replay(entityManager);
 
         if (exception != null) {
             IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                    () -> assetService.add(assetDto));
+                    () -> assetService.add(request));
             assertEquals(exception, thrown.getMessage());
         } else {
-            assertEquals(asset, assetService.add(assetDto));
+            assertEquals(asset, assetService.add(request));
             verify(entityManager);
         }
     }
@@ -321,17 +321,17 @@ public class AssetServiceTest {
     @ParameterizedTest(name = "Test asset delete. Given old asset {0}, expected asset: {1}. " +
             "Should return {1} or exception {2}")
     @MethodSource("getDeleteScenarios")
-    public void deleteTest(Asset asset, Asset expected, ErrorMessages message) {
+    public void deleteTest(Asset asset, Asset expected, ErrorMessages message) throws AuthenticationException {
         expect(entityManager.find(Asset.class, asset.getId())).andReturn(asset.getId() == null ? null : asset);
         expect(assetRepository.save(asset)).andReturn(expected);
         replay(entityManager, assetRepository);
 
         if (message != null) {
             IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                    () -> assetService.delete(asset.getId()));
+                    () -> assetService.delete(asset.getId(), "userId"));
             assertEquals(message.name(), thrown.getMessage());
         } else {
-            assetService.delete(asset.getId());
+            assetService.delete(asset.getId(), "userId");
             verify(entityManager, assetRepository);
         }
     }
