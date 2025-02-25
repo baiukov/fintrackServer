@@ -9,9 +9,11 @@ import me.vse.fintrackserver.model.dto.AccountDto;
 import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import me.vse.fintrackserver.model.dto.UserIdDto;
 import me.vse.fintrackserver.services.AccountService;
+import me.vse.fintrackserver.services.GeneralStatementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,9 @@ public class AccountController {
     @Autowired
     @Lazy
     private AccountService accountService;
+
+    @Autowired
+    private GeneralStatementService generalStatementService;
 
     @GetMapping("/getBalance")
     @Operation(summary = "Get Account Balance", description = "Retrieve the balance of the specified account.")
@@ -204,6 +209,20 @@ public class AccountController {
             return ResponseEntity.ok(accountService.delete(accountId, userId));
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
+    }
+
+    @GetMapping("/general-statement")
+    public ResponseEntity<byte[]> generateGeneralStatement() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=general_statement.xlsx");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(generalStatementService.generateReport("en"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
