@@ -220,7 +220,7 @@ public class AccountController {
 
             return ResponseEntity.ok()
                     .headers(headers)
-                    .body(generalStatementService.generateReport("en"));
+                    .body(generalStatementService.generateReport("en", "dcc3533e-76f2-4c0a-9bb9-3a16259393ab"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
