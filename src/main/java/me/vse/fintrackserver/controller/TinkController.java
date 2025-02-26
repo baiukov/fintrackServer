@@ -27,10 +27,10 @@ public class TinkController {
         return ResponseEntity.ok(authUrl);
     }
 
-    @PostMapping("/callback")
+    @GetMapping("/callback")
     public String exchangeCode(@RequestParam String userId,
                                @RequestParam String account_verification_report_id) throws IOException {
-        System.out.println(userId + " " + account_verification_report_id);
+        tinkService.fetchAccount(userId, account_verification_report_id);
         return null;
     }
 }
