@@ -1,6 +1,7 @@
 package me.vse.fintrackserver.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import me.vse.fintrackserver.rest.responses.BankAccountsResponse;
 import me.vse.fintrackserver.services.TinkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,9 +29,22 @@ public class TinkController {
     }
 
     @GetMapping("/callback")
-    public String exchangeCode(@RequestParam String userId,
-                               @RequestParam String account_verification_report_id) throws IOException {
-        tinkService.fetchAccount(userId, account_verification_report_id);
-        return null;
+    public String exchangeCode(@RequestParam String userId, @RequestParam String code) {
+        try {
+            tinkService.handleCode(userId, code);
+            return "Success";
+        } catch (Exception e) {
+            return e.getMessage();
+        }
     }
+
+    @GetMapping("/getBankAccounts")
+    public ResponseEntity<?> getAccounts(@RequestParam String accountId) {
+        try {
+            return ResponseEntity.ok(tinkService.getAccounts(accountId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
 }

@@ -30,4 +30,8 @@ public enum ErrorMessages {
 
     UNPERMITTED_OPERATION,
 
+    COULD_NOT_HANDLE_ACCESS_CODE,
+
+    COULD_NOT_FETCH_ACCOUNTS,
+
 }

@@ -225,4 +225,17 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @PatchMapping("/updateInitialAmount")
+    public ResponseEntity<String> updateInitialAmount(
+            @Parameter(required = true)
+            @RequestBody AccountDto request
+    ) {
+        try {
+            accountService.setAccountInitialAmount(request);
+            return ResponseEntity.ok().body(null);
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
+    }
 }

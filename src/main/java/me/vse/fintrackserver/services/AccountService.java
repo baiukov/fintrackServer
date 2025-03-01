@@ -253,4 +253,15 @@ public class AccountService {
        return account;
     }
 
+    public void setAccountInitialAmount(AccountDto request) throws IllegalArgumentException {
+        me.vse.fintrackserver.model.Account account = entityManager.find(
+                me.vse.fintrackserver.model.Account.class,
+                request.getInitialAmount()
+        );
+        if (account == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        };
+        account.setInitialAmount(request.getInitialAmount());
+        accountRepository.save(account);
+    }
 }
