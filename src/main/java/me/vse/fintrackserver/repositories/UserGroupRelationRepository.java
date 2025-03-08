@@ -16,7 +16,7 @@ public interface UserGroupRelationRepository extends JpaRepository<UserGroupRela
 
     @Modifying
     @Transactional
-    @Query("delete from UserGroupRelation ugr where ugr.group = :group and ugr.user = :user")
-    void deleteByGroupAndUser(@Param("group") Group group, @Param("user") User user);
+    @Query("delete from UserGroupRelation ugr where ugr.group.id = :groupId and ugr.user.id = :userId")
+    void deleteByGroupAndUser(@Param("groupId") String groupId, @Param("userId") String userId);
 
 }
