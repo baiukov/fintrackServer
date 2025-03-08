@@ -21,7 +21,7 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping("/getAll")
+    @GetMapping("/all")
     @Operation(summary = "Get All Categories", description = "Retrieve all categories for a specific user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved categories"),
@@ -54,7 +54,7 @@ public class CategoryController {
         }
     }
 
-    @PatchMapping("/update")
+    @PutMapping("/update")
     @Operation(summary = "Update Category", description = "Update an existing category with the provided details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Category successfully updated"),

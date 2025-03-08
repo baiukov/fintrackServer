@@ -32,7 +32,7 @@ public class AccountController {
     @Autowired
     private GeneralStatementService generalStatementService;
 
-    @GetMapping("/getBalance")
+    @GetMapping("/balance")
     @Operation(summary = "Get Account Balance", description = "Retrieve the balance of the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved balance"),
@@ -54,7 +54,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getBalance(id, fromDate, endDate));
     }
 
-    @GetMapping("/getNetWorth")
+    @GetMapping("/netWorth")
     @Operation(summary = "Get Net Worth", description = "Calculate the net worth of the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved net worth"),
@@ -77,7 +77,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getNetWorth(id, fromDate, endDate));
     }
 
-    @GetMapping("/getIncome")
+    @GetMapping("/income")
     @Operation(summary = "Get Income", description = "Retrieve the income details for the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved income"),
@@ -98,7 +98,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getIncome(id, fromDate, endDate));
     }
 
-    @GetMapping("/getExpense")
+    @GetMapping("/expense")
     @Operation(summary = "Get Expense", description = "Retrieve the expense details for the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved expenses"),
@@ -136,7 +136,7 @@ public class AccountController {
         }
     }
 
-    @GetMapping("/retrieveAll")
+    @GetMapping("/all")
     @Operation(summary = "Retrieve All Accounts", description = "Get all accounts for a specific user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
@@ -147,7 +147,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.retrieveAll(userId));
     }
 
-    @GetMapping("/retrieveAllWhereOwner")
+    @GetMapping("/allByOwner")
     @Operation(summary = "Retrieve All Accounts Where User Is Owner", description = "Get all accounts for a specific user, who is an owner.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
@@ -158,7 +158,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.retrieveAllWhereIsOwner(userId));
     }
 
-    @GetMapping("/retrievaAllByName")
+    @GetMapping("/allByNameAndUserId")
     @Operation(summary = "Retrieve All Accounts by name and user id", description = "Get all accounts for a specific user with name filter.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
@@ -176,7 +176,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.retrieveAllByName(userId, name, limit));
     }
 
-    @PatchMapping("/update")
+    @PutMapping("/update")
     @Operation(summary = "Update Account", description = "Update an existing account with the provided details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account successfully updated")

@@ -26,7 +26,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/getAllByName")
+    @GetMapping("/allByName")
     @Operation(summary = "Get All Users by part of the user name", description = "Retrieve all users with limit by part of the user name.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved users"),
@@ -38,7 +38,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getByName(name, limit));
     }
 
-    @GetMapping("/getAll")
+    @GetMapping("/all")
     @Operation(summary = "Get All Users", description = "Retrieve all users with pagination.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved users"),

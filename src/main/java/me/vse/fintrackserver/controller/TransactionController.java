@@ -27,7 +27,7 @@ public class TransactionController {
     @Lazy
     private TransactionService transactionService;
 
-    @GetMapping("/getAllByAccount")
+    @GetMapping("/allByAccount")
     @Operation(summary = "Get All Transactions by Account", description = "Retrieve all transactions for a specific account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved transactions"),
@@ -46,7 +46,7 @@ public class TransactionController {
         }
     }
 
-    @GetMapping("/getAllIncomesByCategories")
+    @GetMapping("/allIncomesByCategories")
     @Operation(summary = "Get All Incomes by Categories", description = "Retrieve all income transactions categorized for a specific account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved income transactions"),
@@ -64,7 +64,7 @@ public class TransactionController {
         }
     }
 
-    @GetMapping("/getAllExpensesByCategories")
+    @GetMapping("/allExpensesByCategories")
     @Operation(summary = "Get All Expenses by Categories", description = "Retrieve all expense transactions categorized for a specific account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved expense transactions"),
@@ -98,7 +98,7 @@ public class TransactionController {
         }
     }
 
-    @PatchMapping("/update")
+    @PutMapping("/update")
     @Operation(summary = "Update Transaction", description = "Update an existing transaction with the provided details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Transaction successfully updated"),
@@ -131,7 +131,7 @@ public class TransactionController {
         }
     }
 
-    @PatchMapping("/standingOrder/update")
+    @PutMapping("/standingOrder/update")
     @Operation(summary = "Update Standing Order", description = "Update an existing standing order transaction.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Standing order successfully updated"),

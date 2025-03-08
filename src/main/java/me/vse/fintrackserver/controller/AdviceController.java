@@ -21,7 +21,7 @@ public class AdviceController {
     @Autowired
     private AdviceService adviceService;
 
-    @GetMapping("/getAdvice")
+    @GetMapping("/advice")
     @Operation(summary = "Get Advice", description = "Get generated advice.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved advice"),

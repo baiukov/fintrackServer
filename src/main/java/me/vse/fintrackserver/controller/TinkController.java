@@ -38,7 +38,7 @@ public class TinkController {
         }
     }
 
-    @GetMapping("/getBankAccounts")
+    @GetMapping("/bankAccounts")
     public ResponseEntity<?> getAccounts(@RequestParam String accountId) {
         try {
             return ResponseEntity.ok(tinkService.getAccounts(accountId));
