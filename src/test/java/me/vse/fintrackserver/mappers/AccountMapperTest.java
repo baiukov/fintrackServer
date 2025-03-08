@@ -71,7 +71,7 @@ public class AccountMapperTest {
                 Arguments.of(
                         AccountDto.builder()
                                 .name("defaultAcc")
-                                .interestRate(0)
+                                .interestRate(0.0)
                                 .type(AccountType.CURRENT_ACCOUNT)
                                 .currency(Currency.getInstance("USD"))
                                 .initialAmount(500.0)

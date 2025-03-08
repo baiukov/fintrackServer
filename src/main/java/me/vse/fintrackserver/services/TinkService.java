@@ -44,9 +44,6 @@ public class TinkService {
     @Autowired
     private EntityManager entityManager;
 
-    @Autowired
-    private AccountRepository accountRepository;
-
     private Map<String, BankAccountsResponse> pendingAccounts = new HashMap<>();
 
     public String generateAuthorizationUrl(String accountId) {
@@ -210,10 +207,10 @@ public class TinkService {
 
     }
 
-    public BankAccountsResponse getAccounts(String userId) throws IOException {
-        BankAccountsResponse response = pendingAccounts.get(userId);
+    public BankAccountsResponse getAccounts(String accountId) throws IOException {
+        BankAccountsResponse response = pendingAccounts.get(accountId);
         if (response == null) {
-            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
         }
 
         return response;

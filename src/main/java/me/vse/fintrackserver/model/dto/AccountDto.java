@@ -16,10 +16,10 @@ public class AccountDto {
     private AccountType type;
     private String emoji;
     private Currency currency;
-    private double initialAmount;
-    private double interestRate;
+    private Double initialAmount;
+    private Double interestRate;
     private Long goalAmount;
     private Long alreadyPaidAmount;
-    private boolean isRemoved;
+    private Boolean isRemoved;
 
 }

@@ -19,9 +19,9 @@ public class TinkController {
     @GetMapping("/generate-link")
     public ResponseEntity<String> getAuthorizationUrl(
             @Parameter(description = "The ID of the user", required = true)
-            @RequestParam String userId
+            @RequestParam String accountId
     ) {
-        String authUrl = tinkService.generateAuthorizationUrl(userId);
+        String authUrl = tinkService.generateAuthorizationUrl(accountId);
         if (authUrl == null || authUrl.isEmpty()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error");
         }

@@ -183,8 +183,8 @@ public class AccountController {
     })
     public ResponseEntity<?> update(
             @Parameter(description = "Updated details of the account", required = true)
-            @RequestBody AccountDto request) {
-
+            @RequestBody AccountDto request
+    ) {
         try {
             return ResponseEntity.ok(accountService.update(request));
         } catch (IllegalArgumentException exception) {
@@ -226,16 +226,4 @@ public class AccountController {
         }
     }
 
-    @PatchMapping("/updateInitialAmount")
-    public ResponseEntity<String> updateInitialAmount(
-            @Parameter(required = true)
-            @RequestBody AccountDto request
-    ) {
-        try {
-            accountService.setAccountInitialAmount(request);
-            return ResponseEntity.ok().body(null);
-        } catch (IllegalArgumentException exception) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
-        }
-    }
 }
