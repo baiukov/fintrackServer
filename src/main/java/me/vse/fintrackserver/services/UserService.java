@@ -1,22 +1,32 @@
 package me.vse.fintrackserver.services;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
+import me.vse.fintrackserver.enums.Messages;
 import me.vse.fintrackserver.model.Category;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.SimplifiedEntityDto;
 import me.vse.fintrackserver.repositories.CategoryRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
+import me.vse.fintrackserver.services.utils.PendingRecovery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+
+import java.time.LocalDateTime;
+import java.util.*;
 
 
 @Service
@@ -31,6 +41,12 @@ public class UserService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Autowired
+    private TemplateEngine templateEngine;
 
     @Transactional
     public List<User> getAll(int pageSize, int pageNumber) {
@@ -156,5 +172,94 @@ public class UserService {
         return BCrypt.verifyer().verify(pincode.toCharArray(), user.getPincode()).verified;
     }
 
+    private final Set<PendingRecovery> pendingRecoveries = new HashSet<>();
+    private final int MAX_PENDING_RECOVERY_TIME_IN_MINUTES = 10;
 
+    public void sendCode(String login, String language) throws IllegalArgumentException, MessagingException {
+
+        User user = userRepository.findByUserNameOrEmail(login, login);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+        pendingRecoveries.removeIf(pr -> pr.getUser().getId().equals(user.getId()));
+
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Messages messages = Messages.getInstance();
+
+        String subject = messages.get(language, "PASSWORD_RECOVERY");
+
+        Context context = new Context();
+        context.setVariable("PASSWORD_RECOVERY", subject);
+        context.setVariable("ENTER_CODE", messages.get(language, "ENTER_CODE"));
+        context.setVariable("logoPath", "/img/logoSmall.svg");
+
+        String code = Math.round(Math.random() * 899999 + 100000) + "";
+        pendingRecoveries.add(new PendingRecovery(user, code));
+        context.setVariable("code", code);
+
+        String htmlContent = templateEngine.process("html/passwordRecovery", context);
+        helper.setTo(user.getEmail());
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+        message.setFrom(new InternetAddress("noreply@fintrackserver.ru"));
+
+
+        javaMailSender.send(message);
+    }
+
+    @Scheduled(fixedRate = 60 * 1000)
+    protected void cleanPendingRecoveries() {
+        LocalDateTime now = LocalDateTime.now();
+        pendingRecoveries.removeIf(pendingRecovery -> pendingRecovery.getTimestamp().isBefore(
+                now.minusMinutes(MAX_PENDING_RECOVERY_TIME_IN_MINUTES)
+        ));
+    }
+
+    public boolean verifyCode(String login, String code) {
+        User user = userRepository.findByUserNameOrEmail(login, login);
+        if (user == null) {
+            return false;
+        }
+
+        PendingRecovery pendingRecovery = pendingRecoveries.stream()
+                .filter(pr -> pr.getUser().getId().equals(user.getId()) && pr.getCode().equals(code))
+                .findFirst()
+                .orElse(null);
+
+        if (pendingRecovery == null) {
+            return false;
+        }
+
+        pendingRecovery.setVerified(true);
+        return true;
+    }
+
+    public void updatePassword(String login, String newPassword) throws IllegalArgumentException {
+        User user = userRepository.findByUserNameOrEmail(login, login);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        PendingRecovery pendingRecovery = pendingRecoveries.stream()
+                .filter(pr -> pr.getUser().getId().equals(user.getId()) && pr.isVerified())
+                .findFirst()
+                .orElse(null);
+
+        if (pendingRecovery == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+        pendingRecoveries.remove(pendingRecovery);
+
+        ErrorMessages validatePasswordError = validatePassword(newPassword);
+        if (validatePasswordError != null) {
+            throw new IllegalArgumentException(validatePasswordError.name());
+        }
+
+        String hashedPassword = BCrypt.withDefaults().hashToString(12, newPassword.toCharArray());
+
+        user.setPassword(hashedPassword);
+        userRepository.save(user);
+    }
 }
