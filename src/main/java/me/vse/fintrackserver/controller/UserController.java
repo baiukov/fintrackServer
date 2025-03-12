@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -50,7 +51,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getAll(pageSize, pageNumber));
     }
 
-    @PostMapping("/register")
+    @PostMapping("auth/register")
     @Operation(summary = "Register User", description = "Register a new user with provided details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User successfully registered"),
@@ -59,25 +60,18 @@ public class UserController {
     private ResponseEntity<?> register(
             @Parameter(description = "User registration details", required = true) @RequestBody UserAuthRequest request) {
         try {
-            User user = userService.registerUser(
+
+            return ResponseEntity.ok(userService.registerUser(
                     request.getEmail(),
                     request.getUserName(),
                     request.getPassword()
-            );
-
-            return ResponseEntity.ok(UserAuthResponse.builder()
-                    .id(user.getId())
-                    .email(user.getEmail())
-                    .userName(user.getUserName())
-                    .isAdmin(user.isAdmin())
-                    .isBlocked(user.isBlocked())
-                    .build());
+            ));
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
     }
 
-    @PostMapping("/login")
+    @PostMapping("auth/login")
     @Operation(summary = "User Login", description = "Authenticate user with provided credentials.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User successfully logged in"),
@@ -86,23 +80,42 @@ public class UserController {
     private ResponseEntity<?> login(
             @Parameter(description = "User login credentials", required = true) @RequestBody UserAuthRequest request) {
         try {
-            User user = userService.login(
+            return ResponseEntity.ok(userService.login(
                     request.getEmail(),
                     request.getUserName(),
                     request.getPassword()
-            );
-
-            return ResponseEntity.ok(UserAuthResponse.builder()
-                    .id(user.getId())
-                    .email(user.getEmail())
-                    .hasPincode(!StringUtils.isBlank(user.getPincode()))
-                    .userName(user.getUserName())
-                    .isAdmin(user.isAdmin())
-                    .isBlocked(user.isBlocked())
-                    .build());
+            ));
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
+    }
+
+    @PostMapping("auth/refresh")
+    @Operation(summary = "Refresh Access Token", description = "Generates a new access token using a valid refresh token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "New access token generated successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid or expired refresh token"),
+            @ApiResponse(responseCode = "400", description = "Bad Request: Missing refresh token in request body")
+    })
+    public ResponseEntity<?> refreshToken(
+            @Parameter(description = "Refresh token payload", required = true)
+            @RequestBody Map<String, String> request
+    ) {
+        return userService.refreshToken(request.get("refreshToken"));
+    }
+
+    @GetMapping("/info")
+    @Operation(summary = "Get User Info", description = "Retrieve user data using the access token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User data retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid or expired token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden: Token is missing or incorrect")
+    })
+    public ResponseEntity<?> getUserInfo(
+            @Parameter(description = "Access Token", required = true)
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        return userService.getUserInfo(authHeader);
     }
 
     @PostMapping("/setPincode")

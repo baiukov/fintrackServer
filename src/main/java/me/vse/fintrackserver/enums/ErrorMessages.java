@@ -34,4 +34,7 @@ public enum ErrorMessages {
 
     COULD_NOT_FETCH_ACCOUNTS,
 
+    NO_REFRESH_TOKEN,
+    INVALID_REFRESH_TOKEN,
+
 }

@@ -1,6 +1,8 @@
 package me.vse.fintrackserver.services;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
+import io.jsonwebtoken.JwtException;
+import io.micrometer.common.util.StringUtils;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
@@ -14,12 +16,21 @@ import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.SimplifiedEntityDto;
 import me.vse.fintrackserver.repositories.CategoryRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
+import me.vse.fintrackserver.rest.responses.UserAuthResponse;
+import me.vse.fintrackserver.services.jwt.JwtUtil;
 import me.vse.fintrackserver.services.utils.PendingRecovery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -31,7 +42,7 @@ import java.util.*;
 
 @Service
 @AllArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService{
 
     @Autowired
     private UserRepository userRepository;
@@ -48,6 +59,12 @@ public class UserService {
     @Autowired
     private TemplateEngine templateEngine;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private final JwtUtil jwtUtil;
+
     @Transactional
     public List<User> getAll(int pageSize, int pageNumber) {
         return userRepository.findAllPageable(PageRequest.of(pageNumber, pageSize));
@@ -59,14 +76,14 @@ public class UserService {
         List<SimplifiedEntityDto> simplifiedUsers = new ArrayList<>();
         for (User user : users) {
             simplifiedUsers.add(
-                    new SimplifiedEntityDto(user.getId(), user.getUserName())
+                    new SimplifiedEntityDto(user.getId(), user.getUsername())
             );
         }
         return simplifiedUsers;
     }
 
     @Transactional
-    public User registerUser(String email, String userName, String password) {
+    public UserAuthResponse registerUser(String email, String userName, String password) {
         if (userRepository.findByUserName(userName) != null) {
             throw new IllegalArgumentException(ErrorMessages.USERNAME_EXISTS.name());
         }
@@ -104,7 +121,20 @@ public class UserService {
         );
 
         categoryRepository.saveAll(categories);
-        return user;
+
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
+        String accessToken = jwtUtil.generateAccessToken(userName);
+        String refreshToken = jwtUtil.generateRefreshToken(userName);
+
+        return UserAuthResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .userName(user.getUsername())
+                .isAdmin(user.isAdmin())
+                .isBlocked(user.isBlocked())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     private ErrorMessages validatePassword(String password) {
@@ -128,7 +158,11 @@ public class UserService {
         }
     }
 
-    public User login(String email, String userName, String password) {
+    public UserAuthResponse login(String email, String userName, String password) {
+
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
+        String accessToken = jwtUtil.generateAccessToken(userName);
+        String refreshToken = jwtUtil.generateRefreshToken(userName);
 
         User user = userRepository.findByUserNameOrEmail(userName, email);
         if (user == null) {
@@ -139,7 +173,53 @@ public class UserService {
             throw new IllegalArgumentException(ErrorMessages.WRONG_PASSWORD.name());
         }
 
-        return user;
+        return UserAuthResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .hasPincode(!StringUtils.isBlank(user.getPincode()))
+                .userName(user.getUsername())
+                .isAdmin(user.isAdmin())
+                .isBlocked(user.isBlocked())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    public ResponseEntity<?> getUserInfo(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        String token = authHeader.substring(7);
+
+        try {
+            String userName = jwtUtil.extractUserName(token);
+            User user = userRepository.findByUserNameOrEmail(userName, userName);
+            return ResponseEntity.ok(UserAuthResponse.builder()
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .hasPincode(!StringUtils.isBlank(user.getPincode()))
+                    .userName(user.getUsername())
+                    .isAdmin(user.isAdmin())
+                    .isBlocked(user.isBlocked())
+                    .build());
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    public ResponseEntity<?> refreshToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorMessages.NO_REFRESH_TOKEN.name());
+        }
+
+        if (jwtUtil.validateToken(refreshToken)) {
+            String userId = jwtUtil.extractUserName(refreshToken);
+            String newAccessToken = jwtUtil.generateAccessToken(userId);
+            return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorMessages.INVALID_REFRESH_TOKEN.name());
     }
 
     public void setPincode(String id, String pincode) {
@@ -205,7 +285,7 @@ public class UserService {
         helper.setText(htmlContent, true);
         message.setFrom(new InternetAddress("noreply@fintrackserver.ru"));
 
-
+        
         javaMailSender.send(message);
     }
 
@@ -261,5 +341,10 @@ public class UserService {
 
         user.setPassword(hashedPassword);
         userRepository.save(user);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUserNameOrEmail(username, username);
     }
 }

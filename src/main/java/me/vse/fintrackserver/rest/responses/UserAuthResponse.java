@@ -17,5 +17,6 @@ public class UserAuthResponse {
     private boolean hasPincode;
     private boolean isBlocked;
     private boolean isAdmin;
-
+    private String accessToken;
+    private String refreshToken;
 }
