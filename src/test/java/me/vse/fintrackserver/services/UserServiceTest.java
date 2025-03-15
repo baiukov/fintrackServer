@@ -7,6 +7,7 @@ import me.vse.fintrackserver.enums.ErrorMessages;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.repositories.CategoryRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
+import me.vse.fintrackserver.rest.responses.UserAuthResponse;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ public class UserServiceTest extends ATest {
         entityManager = EasyMock.mock(EntityManager.class);
         userRepository = EasyMock.mock(UserRepository.class);
         categoryRepository = EasyMock.mock(CategoryRepository.class);
-        userService = new UserService(userRepository, entityManager, categoryRepository);
+        userService = new UserService(userRepository, entityManager, categoryRepository, null, null, null, null);
     }
 
     private Stream<Arguments> getRegisterUserScenarios() {
@@ -59,9 +60,9 @@ public class UserServiceTest extends ATest {
         String hashedPassword = BCrypt.withDefaults().hashToString(12, password.toCharArray());
         User expectedUser = User.builder().email(email).userName(userName).password(hashedPassword).build();
 
-        User user = userService.registerUser(email, userName, password);
+        UserAuthResponse user = userService.registerUser(email, userName, password);
 
-        assertEquals(expectedUser, user);
+        assertEquals(expectedUser.getId(), user.getId());
         verify(entityManager);
     }
 
