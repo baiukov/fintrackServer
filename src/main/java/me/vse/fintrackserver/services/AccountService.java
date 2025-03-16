@@ -104,7 +104,7 @@ public class AccountService {
             initialAmount.updateAndGet(v -> v + transaction.getAmount());
         };
 
-        if (savedIncome != null && fromDate == null && endDate == null) {
+        if (savedIncome != null && savedIncome != 0.0 && fromDate == null && endDate == null) {
                 transactionService.getIncomeTransactions(account,
                         LocalDate.now().atStartOfDay(),
                         LocalDateTime.now())
@@ -128,12 +128,12 @@ public class AccountService {
         Consumer<Transaction> decreaseConsumer = transaction -> {
                 initialAmount.updateAndGet(v -> v - transaction.getAmount());
         };
-        if (savedExpense != null && fromDate == null && endDate == null) {
+        if (savedExpense != null && savedExpense != 0.0 && fromDate == null && endDate == null) {
             transactionService.getExpenseTransactions(account,
                             LocalDate.now().atStartOfDay(),
                             LocalDateTime.now())
                     .forEach(decreaseConsumer);
-            initialAmount.updateAndGet(v -> v + savedExpense);
+            initialAmount.updateAndGet(v -> v - savedExpense);
         } else {
             transactionService.getExpenseTransactions(account, fromDate, endDate).forEach(decreaseConsumer);
         }
