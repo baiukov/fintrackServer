@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -96,7 +97,6 @@ public class AccountService {
         Account account = checkAccount(id);
 
         Double savedIncome = transactionAggregationService.getIncome(id);
-        if (savedIncome != null) return savedIncome;
 
         AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
@@ -104,8 +104,16 @@ public class AccountService {
             initialAmount.updateAndGet(v -> v + transaction.getAmount());
         };
 
+        if (savedIncome != null && fromDate == null && endDate == null) {
+                transactionService.getIncomeTransactions(account,
+                        LocalDate.now().atStartOfDay(),
+                        LocalDateTime.now())
+                .forEach(increaseConsumer);
+                initialAmount.updateAndGet(v -> v + savedIncome);
+        } else {
+            transactionService.getIncomeTransactions(account, fromDate, endDate).forEach(increaseConsumer);
+        }
 
-        transactionService.getIncomeTransactions(account, fromDate, endDate).forEach(increaseConsumer);
         return initialAmount.get();
     }
 
@@ -114,16 +122,21 @@ public class AccountService {
         Account account = checkAccount(id);
 
         Double savedExpense = transactionAggregationService.getExpense(id);
-        if (savedExpense != null) return savedExpense;
 
         AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
         Consumer<Transaction> decreaseConsumer = transaction -> {
                 initialAmount.updateAndGet(v -> v - transaction.getAmount());
         };
-
-
-        transactionService.getExpenseTransactions(account, fromDate, endDate).forEach(decreaseConsumer);
+        if (savedExpense != null && fromDate == null && endDate == null) {
+            transactionService.getIncomeTransactions(account,
+                            LocalDate.now().atStartOfDay(),
+                            LocalDateTime.now())
+                    .forEach(decreaseConsumer);
+            initialAmount.updateAndGet(v -> v + savedExpense);
+        } else {
+            transactionService.getExpenseTransactions(account, fromDate, endDate).forEach(decreaseConsumer);
+        }
 
         return initialAmount.get();
     }
