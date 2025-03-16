@@ -129,7 +129,7 @@ public class AccountService {
                 initialAmount.updateAndGet(v -> v - transaction.getAmount());
         };
         if (savedExpense != null && fromDate == null && endDate == null) {
-            transactionService.getIncomeTransactions(account,
+            transactionService.getExpenseTransactions(account,
                             LocalDate.now().atStartOfDay(),
                             LocalDateTime.now())
                     .forEach(decreaseConsumer);
