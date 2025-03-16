@@ -192,6 +192,7 @@ public class AccountService {
                 .map(Group::getAccountGroupsRelations)
                 .flatMap(List::stream)
                 .map(AccountGroupRelation::getAccount)
+                .filter(account -> !account.isRemoved())
                 .collect(Collectors.toSet());
 
         Set<Account> accountsByRights = user.getAccountUserRights()
@@ -199,6 +200,7 @@ public class AccountService {
                 .filter(Objects::nonNull)
                 .filter(aur -> aur.getRights().equals(UserRights.WRITE) || aur.getRights().equals(UserRights.READ))
                 .map(AccountUserRights::getAccount)
+                .filter(account -> !account.isRemoved())
                 .collect(Collectors.toSet());
 
         Set<Account> allAccounts = new HashSet<>(accountByGroup);
@@ -213,6 +215,7 @@ public class AccountService {
                 .filter(Objects::nonNull)
                 .filter(AccountUserRights::isOwner)
                 .map(AccountUserRights::getAccount)
+                .filter(account -> !account.isRemoved())
                 .collect(Collectors.toList());
     }
 
@@ -220,6 +223,7 @@ public class AccountService {
     public List<SimplifiedEntityDto> retrieveAllByName(String userId, String name, int limit) {
         List<Account> accounts = accountRepository.findByUserIdAndName(userId, name, PageRequest.of(0, limit));
         return accounts.stream()
+                .filter(account -> !account.isRemoved())
                 .map(account -> new SimplifiedEntityDto(account.getId(), account.getName()))
                 .toList();
     }
