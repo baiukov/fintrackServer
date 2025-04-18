@@ -347,4 +347,20 @@ public class UserService implements UserDetailsService{
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUserNameOrEmail(username, username);
     }
+
+    @Transactional
+    public boolean deleteUser(String userId, String password) {
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        if (!BCrypt.verifyer().verify(password.toCharArray(), user.getPassword()).verified) {
+            throw new IllegalArgumentException(ErrorMessages.WRONG_PASSWORD.name());
+        }
+
+        categoryRepository.deleteByUserId(userId);
+        userRepository.delete(user);
+        return true;
+    }
 }

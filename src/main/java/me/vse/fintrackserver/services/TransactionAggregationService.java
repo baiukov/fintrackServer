@@ -1,28 +1,19 @@
 package me.vse.fintrackserver.services;
 
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import me.vse.fintrackserver.enums.TransactionTypes;
 import me.vse.fintrackserver.model.Account;
 import me.vse.fintrackserver.model.Category;
-import me.vse.fintrackserver.model.Transaction;
 import me.vse.fintrackserver.model.TransactionAggregation;
 import me.vse.fintrackserver.model.dto.AccountAggregationDTO;
-import me.vse.fintrackserver.repositories.AccountRepository;
 import me.vse.fintrackserver.repositories.AggregationRepository;
 import me.vse.fintrackserver.repositories.TransactionRepository;
-import me.vse.fintrackserver.rest.responses.TransactionByCategoryResponse;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class TransactionAggregationService {
@@ -36,9 +27,9 @@ public class TransactionAggregationService {
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void aggregateAndSaveDailyTransactions() {
-        LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
+        LocalDateTime aDayAgo = LocalDateTime.now().minusDays(1);
 
-        List<Object[]> results = transactionRepository.aggregateTransactionsForLastTwoDays(twoDaysAgo);
+        List<Object[]> results = transactionRepository.aggregateTransactionsForXDays(aDayAgo);
 
         for (Object[] row : results) {
             Account account = (Account) row[0];
@@ -52,9 +43,18 @@ public class TransactionAggregationService {
             TransactionAggregation aggregation;
             if (existingAggregation.isPresent()) {
                 aggregation = existingAggregation.get();
-                aggregation.setTotalIncome(totalIncome);
-                aggregation.setTotalExpense(totalExpense);
+                Double prevIncome = aggregation.getTotalIncome();
+                Double prevExpense = aggregation.getTotalExpense();
+
+                aggregation.setTotalIncome(prevIncome + totalIncome);
+                aggregation.setTotalExpense(prevExpense + totalExpense);
             } else {
+                Object[] result = transactionRepository
+                        .getAggregatedTransactionsForAccountAndCategory(account, category);
+
+                totalIncome = (Double) result[0];
+                totalExpense = (Double) result[1];
+
                 aggregation = TransactionAggregation.builder()
                         .account(account)
                         .category(category)

@@ -210,4 +210,27 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
     }
+
+    @DeleteMapping("/delete")
+    @Operation(
+            summary = "Delete User",
+            description = "Deletes a user from the system by their unique ID and password for authentication."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User successfully deleted"),
+            @ApiResponse(responseCode = "409", description = "Conflict: Invalid user ID or password")
+    })
+    public ResponseEntity<?> deleteUser(
+            @Parameter(description = "Identificator of user", required = true) @RequestParam("name") String userId,
+            @Parameter(description = "User's password", required = true) @RequestParam(required = false) String password)
+    {
+        try {
+            return ResponseEntity.ok(userService.deleteUser(
+                    userId,
+                    password
+            ));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
+    }
 }

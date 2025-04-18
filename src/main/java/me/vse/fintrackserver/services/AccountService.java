@@ -86,9 +86,6 @@ public class AccountService {
     public Double getBalance(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
 
-        Double savedTotal = transactionAggregationService.getTotal(id);
-        if (savedTotal != null) return savedTotal;
-
         return account.getInitialAmount() + getIncome(id, fromDate, endDate) + getExpense(id, fromDate, endDate);
     }
 
