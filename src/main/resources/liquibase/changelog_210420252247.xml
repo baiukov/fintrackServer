@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="03022025" author="Aleksei Baiukov">
+        <sql>
+            ALTER TABLE users
+                ADD (
+                google_id VARCHAR2(255),
+                apple_id VARCHAR2(255),
+                facebook_id VARCHAR2(255)
+            );
+
+            ALTER TABLE users
+                ADD CONSTRAINT uk_users_google_id UNIQUE (google_id);
+            ALTER TABLE users
+                ADD CONSTRAINT uk_users_apple_id UNIQUE (apple_id);
+            ALTER TABLE users
+                ADD CONSTRAINT uk_users_facebook_id UNIQUE (facebook_id);
+
+            COMMENT ON COLUMN users.google_id IS 'Google OAuth provider unique identifier';
+            COMMENT ON COLUMN users.apple_id IS 'Apple Sign-In unique identifier';
+            COMMENT ON COLUMN users.facebook_id IS 'Facebook Login unique identifier';
+        </sql>
+
+        <rollback>
+            ALTER TABLE users DROP CONSTRAINT uk_users_google_id;
+            ALTER TABLE users DROP CONSTRAINT uk_users_apple_id;
+            ALTER TABLE users DROP CONSTRAINT uk_users_facebook_id;
+            ALTER TABLE users DROP COLUMN google_id;
+            ALTER TABLE users DROP COLUMN apple_id;
+            ALTER TABLE users DROP COLUMN facebook_id;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

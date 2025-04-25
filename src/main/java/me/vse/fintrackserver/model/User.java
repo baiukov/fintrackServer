@@ -74,6 +74,15 @@ public class User implements UserDetails {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Column(name = "google_id")
+    private String googleId;
+
+    @Column(name = "apple_id")
+    private String appleId;
+
+    @Column(name = "facebook_id")
+    private String facebookId;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -1,15 +1,12 @@
 package me.vse.fintrackserver.controller;
 
-import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
-import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.rest.requests.*;
-import me.vse.fintrackserver.rest.responses.UserAuthResponse;
 import me.vse.fintrackserver.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/user")
@@ -89,6 +85,62 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
     }
+
+    @PostMapping("auth/login/google")
+    @Operation(summary = "User Login", description = "Authenticate user with provided credentials.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User successfully logged in"),
+            @ApiResponse(responseCode = "409", description = "Conflict: login failed due to invalid credentials")
+    })
+    private ResponseEntity<?> loginGoogle(
+            @Parameter(description = "User login credentials", required = true) @RequestBody UserAuthGoogleRequest authGoogleRequest) {
+        try {
+            return ResponseEntity.ok(userService.loginGoogle(
+                    authGoogleRequest.getToken(),
+                    authGoogleRequest.getPlatform()
+            ));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+        }
+    }
+
+//    @PostMapping("auth/login/apple")
+//    @Operation(summary = "User Login", description = "Authenticate user with provided credentials.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "User successfully logged in"),
+//            @ApiResponse(responseCode = "409", description = "Conflict: login failed due to invalid credentials")
+//    })
+//    private ResponseEntity<?> loginApple(
+//            @Parameter(description = "User login credentials", required = true) @RequestBody String token) {
+//        try {
+//            return ResponseEntity.ok(userService.login(
+//                    request.getEmail(),
+//                    request.getUserName(),
+//                    request.getPassword()
+//            ));
+//        } catch (IllegalArgumentException exception) {
+//            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+//        }
+//    }
+//
+//    @PostMapping("auth/login/facebook")
+//    @Operation(summary = "User Login", description = "Authenticate user with provided credentials.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "User successfully logged in"),
+//            @ApiResponse(responseCode = "409", description = "Conflict: login failed due to invalid credentials")
+//    })
+//    private ResponseEntity<?> loginFacebook(
+//            @Parameter(description = "User login credentials", required = true) @RequestBody String token) {
+//        try {
+//            return ResponseEntity.ok(userService.login(
+//                    request.getEmail(),
+//                    request.getUserName(),
+//                    request.getPassword()
+//            ));
+//        } catch (IllegalArgumentException exception) {
+//            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+//        }
+//    }
 
     @PostMapping("auth/refresh")
     @Operation(summary = "Refresh Access Token", description = "Generates a new access token using a valid refresh token.")
@@ -221,7 +273,7 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "Conflict: Invalid user ID or password")
     })
     public ResponseEntity<?> deleteUser(
-            @Parameter(description = "Identificator of user", required = true) @RequestParam("name") String userId,
+            @Parameter(description = "Identificator of user", required = true) @RequestParam String userId,
             @Parameter(description = "User's password", required = true) @RequestParam(required = false) String password)
     {
         try {

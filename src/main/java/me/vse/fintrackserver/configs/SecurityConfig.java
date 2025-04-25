@@ -44,6 +44,7 @@ public class SecurityConfig {
         provider.setPasswordEncoder(passwordEncoder());
         return new ProviderManager(provider);
     }
+
     @Bean
     public SecurityFilterChain security(HttpSecurity http) throws Exception {
         return http
@@ -55,7 +56,9 @@ public class SecurityConfig {
                                 "/api/v1/user/auth/**",
                                 "/api/v1/tink/callback",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/support",
+                                "/privacy"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

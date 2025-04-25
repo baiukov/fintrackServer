@@ -39,7 +39,7 @@ public class UserServiceTest extends ATest {
         entityManager = EasyMock.mock(EntityManager.class);
         userRepository = EasyMock.mock(UserRepository.class);
         categoryRepository = EasyMock.mock(CategoryRepository.class);
-        userService = new UserService(userRepository, entityManager, categoryRepository, null, null, null, null);
+        userService = new UserService(userRepository, entityManager, categoryRepository, null, null, null, null, "", "");
     }
 
     private Stream<Arguments> getRegisterUserScenarios() {

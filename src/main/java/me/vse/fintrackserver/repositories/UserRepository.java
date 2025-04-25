@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
@@ -30,4 +31,6 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("select u from User u")
     List<User> findAllPageable(Pageable pageable);
+
+    Optional<User> findByGoogleIdOrEmail(String googleId, String email);
 }

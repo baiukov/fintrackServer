@@ -1,6 +1,11 @@
 package me.vse.fintrackserver.services;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import io.jsonwebtoken.JwtException;
 import io.micrometer.common.util.StringUtils;
 import jakarta.mail.MessagingException;
@@ -20,6 +25,7 @@ import me.vse.fintrackserver.rest.responses.UserAuthResponse;
 import me.vse.fintrackserver.services.jwt.JwtUtil;
 import me.vse.fintrackserver.services.utils.PendingRecovery;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +47,6 @@ import java.util.*;
 
 
 @Service
-@AllArgsConstructor
 public class UserService implements UserDetailsService{
 
     @Autowired
@@ -64,6 +69,32 @@ public class UserService implements UserDetailsService{
 
     @Autowired
     private final JwtUtil jwtUtil;
+
+    private final String GOOGLE_CLIENT_ID_ANDROID;
+
+    private final String GOOGLE_CLIENT_ID_IOS;
+
+    public UserService(
+            UserRepository userRepository,
+            EntityManager entityManager,
+            CategoryRepository categoryRepository,
+            JavaMailSender javaMailSender,
+            TemplateEngine templateEngine,
+            AuthenticationManager authenticationManager,
+            JwtUtil jwtUtil,
+            @Value("${google.client.android.id}") String googleClientIdAndroid,
+            @Value("${google.client.ios.id}") String googleClientIdIos
+    ) {
+        this.userRepository = userRepository;
+        this.entityManager = entityManager;
+        this.categoryRepository = categoryRepository;
+        this.javaMailSender = javaMailSender;
+        this.templateEngine = templateEngine;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.GOOGLE_CLIENT_ID_ANDROID = googleClientIdAndroid;
+        this.GOOGLE_CLIENT_ID_IOS = googleClientIdIos;
+    }
 
     @Transactional
     public List<User> getAll(int pageSize, int pageNumber) {
@@ -183,6 +214,45 @@ public class UserService implements UserDetailsService{
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    public UserAuthResponse loginGoogle(String token, String platform) {
+        try {
+            GoogleIdToken.Payload payload = verifyGoogleToken(token, platform);
+
+            if (payload == null) {
+                throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+            }
+
+            String userGoogleId = payload.getSubject();
+            String email = payload.getEmail();
+
+            User user = userRepository.findByGoogleIdOrEmail(userGoogleId, email)
+                    .orElse(userRepository.save(User.builder()
+                            .userName(email.split("@")[0])
+                            .email(email)
+                            .googleId(userGoogleId)
+                            .build())
+                    );
+
+            String userName = user.getUsername();
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, userGoogleId));
+            String accessToken = jwtUtil.generateAccessToken(userName);
+            String refreshToken = jwtUtil.generateRefreshToken(userName);
+
+            return UserAuthResponse.builder()
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .hasPincode(!StringUtils.isBlank(user.getPincode()))
+                    .userName(user.getUsername())
+                    .isAdmin(user.isAdmin())
+                    .isBlocked(user.isBlocked())
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+        } catch (Exception e) {
+            throw new IllegalArgumentException(ErrorMessages.WRONG_PASSWORD.name());
+        }
     }
 
     public ResponseEntity<?> getUserInfo(String authHeader) {
@@ -363,4 +433,18 @@ public class UserService implements UserDetailsService{
         userRepository.delete(user);
         return true;
     }
+
+    private GoogleIdToken.Payload verifyGoogleToken(String idTokenString, String platform) throws Exception {
+        NetHttpTransport transport = new NetHttpTransport();
+
+        String clientId = "ios".equals(platform) ? GOOGLE_CLIENT_ID_IOS : GOOGLE_CLIENT_ID_ANDROID;
+
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, new GsonFactory())
+                .setAudience(Collections.singletonList(clientId))
+                .build();
+
+        GoogleIdToken idToken = verifier.verify(idTokenString);
+        return idToken != null ? idToken.getPayload() : null;
+    }
+
 }
