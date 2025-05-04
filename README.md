@@ -91,9 +91,9 @@ Před spuštěním projektu se ujistěte, že máte nainstalovány následujíc�
 
 ### 1. Klonování repozitáře
 Naklonujte tento repozitář do svého počítače:
-```bash
+`bash
 git clone https://github.com/baiukov/fintrackServer.git
-cd fintrackServer ```
+cd fintrackServer `
 
 ### 2. Konfigurace prostředí
 Tento projekt používá soubor .env nebo application.properties pro nastavení prostředí. Ujistěte se, že jste nastavili následující parametry:
