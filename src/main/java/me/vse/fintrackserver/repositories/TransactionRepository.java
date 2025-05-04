@@ -1,6 +1,7 @@
 package me.vse.fintrackserver.repositories;
 
 import me.vse.fintrackserver.model.Account;
+import me.vse.fintrackserver.model.Category;
 import me.vse.fintrackserver.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -49,9 +50,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
                SUM(CASE WHEN t.type = me.vse.fintrackserver.enums.TransactionTypes.INCOME THEN t.amount ELSE 0 END) AS totalIncome,
                SUM(CASE WHEN t.type = me.vse.fintrackserver.enums.TransactionTypes.EXPENSE THEN t.amount ELSE 0 END) AS totalExpense
         FROM Transaction t
-        WHERE t.executionDateTime >= :twoDaysAgo
+        WHERE t.executionDateTime >= :xDays
         GROUP BY t.account, t.category
     """)
-    List<Object[]> aggregateTransactionsForLastTwoDays(@Param("twoDaysAgo") LocalDateTime twoDaysAgo);
+    List<Object[]> aggregateTransactionsForXDays(@Param("xDays") LocalDateTime xDays);
+    @Query("""
+        SELECT SUM(CASE WHEN t.type = me.vse.fintrackserver.enums.TransactionTypes.INCOME THEN t.amount ELSE 0 END) AS totalIncome,
+               SUM(CASE WHEN t.type = me.vse.fintrackserver.enums.TransactionTypes.EXPENSE THEN t.amount ELSE 0 END) AS totalExpense
+        FROM Transaction t
+        WHERE t.account = :account and t.category = :category
+    """)
+    Object[] getAggregatedTransactionsForAccountAndCategory(@Param("account") Account account,
+                                                                  @Param("category") Category category);
 
 }

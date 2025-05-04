@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "assets")
@@ -29,6 +30,11 @@ public class Asset {
     @JoinColumn(name = "account_id", referencedColumnName = "id")
     @ToString.Exclude
     private Account account;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "forAsset")
+    @ToString.Exclude
+    @JsonIgnore
+    private List<Transaction> transactions;
 
     @Column(name = "name")
     private String name;

@@ -185,12 +185,26 @@ public class GroupService {
                 .map(user -> new UserGroupRelation(user, group))
                 .toList());
 
-        for (UserGroupRelation userGroupRelation : group.getGroupUsersRelations()) {
-            entityManager.remove(userGroupRelation);
-        }
-        for (UserGroupRelation userGroupRelation : userGroupRelations) {
-            entityManager.persist(userGroupRelation);
-        }
+        userGroupRelations.add(new UserGroupRelation(group.getOwner(), group));
+
+        List<UserGroupRelation> usersToBeDeleted = group.getGroupUsersRelations()
+                .stream()
+                .filter(userGroupRelation -> userGroupRelations
+                        .stream()
+                        .noneMatch(ugr -> ugr.getUser().getId().equals(userGroupRelation.getUser().getId()))
+                )
+                .toList();
+
+        List<UserGroupRelation> usersToBeAdded = userGroupRelations
+                .stream()
+                .filter(userGroupRelation -> group.getGroupUsersRelations()
+                        .stream()
+                        .noneMatch(ugr -> ugr.getUser().getId().equals(userGroupRelation.getUser().getId()))
+                )
+                .toList();
+
+        userGroupRelationRepository.deleteAll(usersToBeDeleted);
+        userGroupRelationRepository.saveAll(usersToBeAdded);
 
         List<AccountGroupRelation> accountGroupRelations = new ArrayList<>(accounts.stream()
                 .filter(account -> group.getAccountGroupsRelations()
@@ -204,10 +218,26 @@ public class GroupService {
                 .map(account -> new AccountGroupRelation(account, group))
                 .toList());
 
-        for (AccountGroupRelation agr : group.getAccountGroupsRelations()) {
+        List<AccountGroupRelation> accountsToBeDeleted = group.getAccountGroupsRelations()
+                .stream()
+                .filter(accountGroupRelation -> accounts
+                        .stream()
+                        .noneMatch(acc -> acc.getId().equals(accountGroupRelation.getAccount().getId()))
+                )
+                .toList();
+
+        List<AccountGroupRelation> accountsToBeAdded = accountGroupRelations
+                .stream()
+                .filter(accountGroupRelation -> group.getAccountGroupsRelations()
+                        .stream()
+                        .noneMatch(agr -> agr.getAccount().getId().equals(accountGroupRelation.getAccount().getId()))
+                )
+                .toList();
+
+        for (AccountGroupRelation agr : accountsToBeDeleted) {
             entityManager.remove(agr);
         }
-        for (AccountGroupRelation agr : accountGroupRelations) {
+        for (AccountGroupRelation agr : accountsToBeAdded) {
             entityManager.persist(agr);
         }
 

@@ -396,6 +396,8 @@ public class TransactionService {
             return transactionRepository.findAllByAccount(account, fromDate, LocalDateTime.now());
         } else if (fromDate == null && endDate != null) {
             return transactionRepository.findAllByAccount(account, endDate);
+        } else if (fromDate != null) {
+            return transactionRepository.findAllByAccount(account, fromDate, endDate);
         } else {
             return transactionRepository.findAllByAccount(account);
         }

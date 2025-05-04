@@ -66,6 +66,7 @@ public class AssetService {
                 .map(AccountUserRights::getAccount)
                 .map(Account::getAssets)
                 .flatMap(List::stream)
+                .filter(asset -> asset.getEndDate().isAfter(LocalDate.now()))
                 .filter(asset -> !asset.isRemoved())
                 .toList();
     }

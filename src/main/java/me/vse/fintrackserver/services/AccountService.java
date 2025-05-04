@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -85,9 +86,6 @@ public class AccountService {
     public Double getBalance(String id, LocalDateTime fromDate, LocalDateTime endDate) {
         Account account = checkAccount(id);
 
-        Double savedTotal = transactionAggregationService.getTotal(id);
-        if (savedTotal != null) return savedTotal;
-
         return account.getInitialAmount() + getIncome(id, fromDate, endDate) + getExpense(id, fromDate, endDate);
     }
 
@@ -96,7 +94,6 @@ public class AccountService {
         Account account = checkAccount(id);
 
         Double savedIncome = transactionAggregationService.getIncome(id);
-        if (savedIncome != null) return savedIncome;
 
         AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
@@ -104,8 +101,16 @@ public class AccountService {
             initialAmount.updateAndGet(v -> v + transaction.getAmount());
         };
 
+        if (savedIncome != null && savedIncome != 0.0 && fromDate == null && endDate == null) {
+                transactionService.getIncomeTransactions(account,
+                        LocalDate.now().atStartOfDay(),
+                        LocalDateTime.now())
+                .forEach(increaseConsumer);
+                initialAmount.updateAndGet(v -> v + savedIncome);
+        } else {
+            transactionService.getIncomeTransactions(account, fromDate, endDate).forEach(increaseConsumer);
+        }
 
-        transactionService.getIncomeTransactions(account, fromDate, endDate).forEach(increaseConsumer);
         return initialAmount.get();
     }
 
@@ -114,16 +119,21 @@ public class AccountService {
         Account account = checkAccount(id);
 
         Double savedExpense = transactionAggregationService.getExpense(id);
-        if (savedExpense != null) return savedExpense;
 
         AtomicReference<Double> initialAmount = new AtomicReference<>(0.0);
 
         Consumer<Transaction> decreaseConsumer = transaction -> {
                 initialAmount.updateAndGet(v -> v - transaction.getAmount());
         };
-
-
-        transactionService.getExpenseTransactions(account, fromDate, endDate).forEach(decreaseConsumer);
+        if (savedExpense != null && savedExpense != 0.0 && fromDate == null && endDate == null) {
+            transactionService.getExpenseTransactions(account,
+                            LocalDate.now().atStartOfDay(),
+                            LocalDateTime.now())
+                    .forEach(decreaseConsumer);
+            initialAmount.updateAndGet(v -> v - savedExpense);
+        } else {
+            transactionService.getExpenseTransactions(account, fromDate, endDate).forEach(decreaseConsumer);
+        }
 
         return initialAmount.get();
     }
@@ -179,6 +189,7 @@ public class AccountService {
                 .map(Group::getAccountGroupsRelations)
                 .flatMap(List::stream)
                 .map(AccountGroupRelation::getAccount)
+                .filter(account -> !account.isRemoved())
                 .collect(Collectors.toSet());
 
         Set<Account> accountsByRights = user.getAccountUserRights()
@@ -186,6 +197,7 @@ public class AccountService {
                 .filter(Objects::nonNull)
                 .filter(aur -> aur.getRights().equals(UserRights.WRITE) || aur.getRights().equals(UserRights.READ))
                 .map(AccountUserRights::getAccount)
+                .filter(account -> !account.isRemoved())
                 .collect(Collectors.toSet());
 
         Set<Account> allAccounts = new HashSet<>(accountByGroup);
@@ -200,6 +212,7 @@ public class AccountService {
                 .filter(Objects::nonNull)
                 .filter(AccountUserRights::isOwner)
                 .map(AccountUserRights::getAccount)
+                .filter(account -> !account.isRemoved())
                 .collect(Collectors.toList());
     }
 
@@ -207,6 +220,7 @@ public class AccountService {
     public List<SimplifiedEntityDto> retrieveAllByName(String userId, String name, int limit) {
         List<Account> accounts = accountRepository.findByUserIdAndName(userId, name, PageRequest.of(0, limit));
         return accounts.stream()
+                .filter(account -> !account.isRemoved())
                 .map(account -> new SimplifiedEntityDto(account.getId(), account.getName()))
                 .toList();
     }
@@ -253,4 +267,15 @@ public class AccountService {
        return account;
     }
 
+    public void setAccountInitialAmount(AccountDto request) throws IllegalArgumentException {
+        me.vse.fintrackserver.model.Account account = entityManager.find(
+                me.vse.fintrackserver.model.Account.class,
+                request.getInitialAmount()
+        );
+        if (account == null) {
+            throw new IllegalArgumentException(ErrorMessages.ACCOUNT_DOESNT_EXIST.name());
+        };
+        account.setInitialAmount(request.getInitialAmount());
+        accountRepository.save(account);
+    }
 }

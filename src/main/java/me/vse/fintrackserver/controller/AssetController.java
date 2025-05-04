@@ -23,7 +23,7 @@ public class AssetController {
     @Autowired
     private AssetService assetService;
 
-    @GetMapping("/getAllByAccount")
+    @GetMapping("/allByAccount")
     @Operation(summary = "Get All Assets For Account", description = "Retrieve all assets for a specific account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved assets"),
@@ -39,7 +39,7 @@ public class AssetController {
         }
     }
 
-    @GetMapping("/getAll")
+    @GetMapping("/all")
     @Operation(summary = "Get All Assets", description = "Retrieve all assets for a specific account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved assets"),
@@ -75,7 +75,7 @@ public class AssetController {
         }
     }
 
-    @PatchMapping("/update")
+    @PutMapping("/update")
     @Operation(summary = "Update Asset", description = "Update an existing asset with the provided details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Asset successfully updated"),

@@ -1,27 +1,48 @@
 package me.vse.fintrackserver.services;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
+import io.jsonwebtoken.JwtException;
+import io.micrometer.common.util.StringUtils;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import me.vse.fintrackserver.enums.ErrorMessages;
+import me.vse.fintrackserver.enums.Messages;
 import me.vse.fintrackserver.model.Category;
 import me.vse.fintrackserver.model.User;
 import me.vse.fintrackserver.model.dto.SimplifiedEntityDto;
 import me.vse.fintrackserver.repositories.CategoryRepository;
 import me.vse.fintrackserver.repositories.UserRepository;
+import me.vse.fintrackserver.rest.responses.UserAuthResponse;
+import me.vse.fintrackserver.services.jwt.JwtUtil;
+import me.vse.fintrackserver.services.utils.PendingRecovery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+
+import java.time.LocalDateTime;
+import java.util.*;
 
 
 @Service
 @AllArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService{
 
     @Autowired
     private UserRepository userRepository;
@@ -31,6 +52,18 @@ public class UserService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Autowired
+    private TemplateEngine templateEngine;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private final JwtUtil jwtUtil;
 
     @Transactional
     public List<User> getAll(int pageSize, int pageNumber) {
@@ -43,14 +76,14 @@ public class UserService {
         List<SimplifiedEntityDto> simplifiedUsers = new ArrayList<>();
         for (User user : users) {
             simplifiedUsers.add(
-                    new SimplifiedEntityDto(user.getId(), user.getUserName())
+                    new SimplifiedEntityDto(user.getId(), user.getUsername())
             );
         }
         return simplifiedUsers;
     }
 
     @Transactional
-    public User registerUser(String email, String userName, String password) {
+    public UserAuthResponse registerUser(String email, String userName, String password) {
         if (userRepository.findByUserName(userName) != null) {
             throw new IllegalArgumentException(ErrorMessages.USERNAME_EXISTS.name());
         }
@@ -88,7 +121,20 @@ public class UserService {
         );
 
         categoryRepository.saveAll(categories);
-        return user;
+
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
+        String accessToken = jwtUtil.generateAccessToken(userName);
+        String refreshToken = jwtUtil.generateRefreshToken(userName);
+
+        return UserAuthResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .userName(user.getUsername())
+                .isAdmin(user.isAdmin())
+                .isBlocked(user.isBlocked())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     private ErrorMessages validatePassword(String password) {
@@ -112,7 +158,11 @@ public class UserService {
         }
     }
 
-    public User login(String email, String userName, String password) {
+    public UserAuthResponse login(String email, String userName, String password) {
+
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
+        String accessToken = jwtUtil.generateAccessToken(userName);
+        String refreshToken = jwtUtil.generateRefreshToken(userName);
 
         User user = userRepository.findByUserNameOrEmail(userName, email);
         if (user == null) {
@@ -123,7 +173,53 @@ public class UserService {
             throw new IllegalArgumentException(ErrorMessages.WRONG_PASSWORD.name());
         }
 
-        return user;
+        return UserAuthResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .hasPincode(!StringUtils.isBlank(user.getPincode()))
+                .userName(user.getUsername())
+                .isAdmin(user.isAdmin())
+                .isBlocked(user.isBlocked())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    public ResponseEntity<?> getUserInfo(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        String token = authHeader.substring(7);
+
+        try {
+            String userName = jwtUtil.extractUserName(token);
+            User user = userRepository.findByUserNameOrEmail(userName, userName);
+            return ResponseEntity.ok(UserAuthResponse.builder()
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .hasPincode(!StringUtils.isBlank(user.getPincode()))
+                    .userName(user.getUsername())
+                    .isAdmin(user.isAdmin())
+                    .isBlocked(user.isBlocked())
+                    .build());
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    public ResponseEntity<?> refreshToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorMessages.NO_REFRESH_TOKEN.name());
+        }
+
+        if (jwtUtil.validateToken(refreshToken)) {
+            String userId = jwtUtil.extractUserName(refreshToken);
+            String newAccessToken = jwtUtil.generateAccessToken(userId);
+            return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorMessages.INVALID_REFRESH_TOKEN.name());
     }
 
     public void setPincode(String id, String pincode) {
@@ -156,5 +252,115 @@ public class UserService {
         return BCrypt.verifyer().verify(pincode.toCharArray(), user.getPincode()).verified;
     }
 
+    private final Set<PendingRecovery> pendingRecoveries = new HashSet<>();
+    private final int MAX_PENDING_RECOVERY_TIME_IN_MINUTES = 10;
 
+    public void sendCode(String login, String language) throws IllegalArgumentException, MessagingException {
+
+        User user = userRepository.findByUserNameOrEmail(login, login);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+        pendingRecoveries.removeIf(pr -> pr.getUser().getId().equals(user.getId()));
+
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        Messages messages = Messages.getInstance();
+
+        String subject = messages.get(language, "PASSWORD_RECOVERY");
+
+        Context context = new Context();
+        context.setVariable("PASSWORD_RECOVERY", subject);
+        context.setVariable("ENTER_CODE", messages.get(language, "ENTER_CODE"));
+        context.setVariable("logoPath", "/img/logoSmall.svg");
+
+        String code = Math.round(Math.random() * 899999 + 100000) + "";
+        pendingRecoveries.add(new PendingRecovery(user, code));
+        context.setVariable("code", code);
+
+        String htmlContent = templateEngine.process("html/passwordRecovery", context);
+        helper.setTo(user.getEmail());
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+        message.setFrom(new InternetAddress("noreply@fintrackserver.ru"));
+
+        
+        javaMailSender.send(message);
+    }
+
+    @Scheduled(fixedRate = 60 * 1000)
+    protected void cleanPendingRecoveries() {
+        LocalDateTime now = LocalDateTime.now();
+        pendingRecoveries.removeIf(pendingRecovery -> pendingRecovery.getTimestamp().isBefore(
+                now.minusMinutes(MAX_PENDING_RECOVERY_TIME_IN_MINUTES)
+        ));
+    }
+
+    public boolean verifyCode(String login, String code) {
+        User user = userRepository.findByUserNameOrEmail(login, login);
+        if (user == null) {
+            return false;
+        }
+
+        PendingRecovery pendingRecovery = pendingRecoveries.stream()
+                .filter(pr -> pr.getUser().getId().equals(user.getId()) && pr.getCode().equals(code))
+                .findFirst()
+                .orElse(null);
+
+        if (pendingRecovery == null) {
+            return false;
+        }
+
+        pendingRecovery.setVerified(true);
+        return true;
+    }
+
+    public void updatePassword(String login, String newPassword) throws IllegalArgumentException {
+        User user = userRepository.findByUserNameOrEmail(login, login);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        PendingRecovery pendingRecovery = pendingRecoveries.stream()
+                .filter(pr -> pr.getUser().getId().equals(user.getId()) && pr.isVerified())
+                .findFirst()
+                .orElse(null);
+
+        if (pendingRecovery == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+        pendingRecoveries.remove(pendingRecovery);
+
+        ErrorMessages validatePasswordError = validatePassword(newPassword);
+        if (validatePasswordError != null) {
+            throw new IllegalArgumentException(validatePasswordError.name());
+        }
+
+        String hashedPassword = BCrypt.withDefaults().hashToString(12, newPassword.toCharArray());
+
+        user.setPassword(hashedPassword);
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUserNameOrEmail(username, username);
+    }
+
+    @Transactional
+    public boolean deleteUser(String userId, String password) {
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorMessages.USER_DOESNT_EXIST.name());
+        }
+
+        if (!BCrypt.verifyer().verify(password.toCharArray(), user.getPassword()).verified) {
+            throw new IllegalArgumentException(ErrorMessages.WRONG_PASSWORD.name());
+        }
+
+        categoryRepository.deleteByUserId(userId);
+        userRepository.delete(user);
+        return true;
+    }
 }

@@ -22,7 +22,7 @@ public class GroupController {
     @Autowired
     private GroupService groupService;
 
-    @GetMapping("/getAll")
+    @GetMapping("/all")
     @Operation(summary = "Get All Groups", description = "Retrieve all groups for a specific user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved groups"),
@@ -91,7 +91,7 @@ public class GroupController {
         }
     }
 
-    @PatchMapping("/update")
+    @PutMapping("/update")
     @Operation(summary = "Update Group", description = "Update an existing group with the provided details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Group successfully updated"),

@@ -9,9 +9,11 @@ import me.vse.fintrackserver.model.dto.AccountDto;
 import me.vse.fintrackserver.rest.requests.AccountAddRequest;
 import me.vse.fintrackserver.model.dto.UserIdDto;
 import me.vse.fintrackserver.services.AccountService;
+import me.vse.fintrackserver.services.GeneralStatementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +29,10 @@ public class AccountController {
     @Lazy
     private AccountService accountService;
 
-    @GetMapping("/getBalance")
+    @Autowired
+    private GeneralStatementService generalStatementService;
+
+    @GetMapping("/balance")
     @Operation(summary = "Get Account Balance", description = "Retrieve the balance of the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved balance"),
@@ -49,7 +54,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getBalance(id, fromDate, endDate));
     }
 
-    @GetMapping("/getNetWorth")
+    @GetMapping("/netWorth")
     @Operation(summary = "Get Net Worth", description = "Calculate the net worth of the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved net worth"),
@@ -72,7 +77,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getNetWorth(id, fromDate, endDate));
     }
 
-    @GetMapping("/getIncome")
+    @GetMapping("/income")
     @Operation(summary = "Get Income", description = "Retrieve the income details for the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved income"),
@@ -93,7 +98,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getIncome(id, fromDate, endDate));
     }
 
-    @GetMapping("/getExpense")
+    @GetMapping("/expense")
     @Operation(summary = "Get Expense", description = "Retrieve the expense details for the specified account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved expenses"),
@@ -131,7 +136,7 @@ public class AccountController {
         }
     }
 
-    @GetMapping("/retrieveAll")
+    @GetMapping("/all")
     @Operation(summary = "Retrieve All Accounts", description = "Get all accounts for a specific user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
@@ -142,7 +147,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.retrieveAll(userId));
     }
 
-    @GetMapping("/retrieveAllWhereOwner")
+    @GetMapping("/allByOwner")
     @Operation(summary = "Retrieve All Accounts Where User Is Owner", description = "Get all accounts for a specific user, who is an owner.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
@@ -153,7 +158,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.retrieveAllWhereIsOwner(userId));
     }
 
-    @GetMapping("/retrievaAllByName")
+    @GetMapping("/allByNameAndUserId")
     @Operation(summary = "Retrieve All Accounts by name and user id", description = "Get all accounts for a specific user with name filter.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved accounts")
@@ -171,15 +176,15 @@ public class AccountController {
         return ResponseEntity.ok(accountService.retrieveAllByName(userId, name, limit));
     }
 
-    @PatchMapping("/update")
+    @PutMapping("/update")
     @Operation(summary = "Update Account", description = "Update an existing account with the provided details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account successfully updated")
     })
     public ResponseEntity<?> update(
             @Parameter(description = "Updated details of the account", required = true)
-            @RequestBody AccountDto request) {
-
+            @RequestBody AccountDto request
+    ) {
         try {
             return ResponseEntity.ok(accountService.update(request));
         } catch (IllegalArgumentException exception) {
@@ -206,4 +211,19 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
     }
+
+    @GetMapping("/general-statement")
+    public ResponseEntity<byte[]> generateGeneralStatement() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=general_statement.xlsx");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(generalStatementService.generateReport("en", "dcc3533e-76f2-4c0a-9bb9-3a16259393ab"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

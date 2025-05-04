@@ -1,6 +1,7 @@
 package me.vse.fintrackserver.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import me.vse.fintrackserver.rest.responses.BankAccountsResponse;
 import me.vse.fintrackserver.services.TinkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,19 +19,32 @@ public class TinkController {
     @GetMapping("/generate-link")
     public ResponseEntity<String> getAuthorizationUrl(
             @Parameter(description = "The ID of the user", required = true)
-            @RequestParam String userId
+            @RequestParam String accountId
     ) {
-        String authUrl = tinkService.generateAuthorizationUrl(userId);
+        String authUrl = tinkService.generateAuthorizationUrl(accountId);
         if (authUrl == null || authUrl.isEmpty()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error");
         }
         return ResponseEntity.ok(authUrl);
     }
 
-    @PostMapping("/callback")
-    public String exchangeCode(@RequestParam String userId,
-                               @RequestParam String account_verification_report_id) throws IOException {
-        System.out.println(userId + " " + account_verification_report_id);
-        return null;
+    @GetMapping("/callback")
+    public String exchangeCode(@RequestParam String userId, @RequestParam String code) {
+        try {
+            tinkService.handleCode(userId, code);
+            return "Success";
+        } catch (Exception e) {
+            return e.getMessage();
+        }
     }
+
+    @GetMapping("/bankAccounts")
+    public ResponseEntity<?> getAccounts(@RequestParam String accountId) {
+        try {
+            return ResponseEntity.ok(tinkService.getAccounts(accountId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
 }
