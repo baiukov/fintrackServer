@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
 
+/**
+ * # Služba pro správu účtů
+ */
 @Service
 @AllArgsConstructor
 @Builder
@@ -277,5 +280,38 @@ public class AccountService {
         };
         account.setInitialAmount(request.getInitialAmount());
         accountRepository.save(account);
+    }
+
+    /**
+     * # Získání všech účtů uživatele
+     * @param user Uživatel
+     * @return Seznam účtů
+     */
+    public List<Account> getUserAccounts(User user) {
+        return user.getAccountUserRights().stream()
+                .map(AccountUserRights::getAccount)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * # Kontrola přístupu uživatele k účtu
+     * @param accountId ID účtu
+     * @param user Uživatel
+     * @return Účet, pokud má uživatel přístup
+     * @throws IllegalArgumentException pokud účet neexistuje
+     * @throws IllegalArgumentException pokud uživatel nemá přístup
+     */
+    public Account checkUserAccountAccess(String accountId, User user) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found with id: " + accountId));
+
+        boolean hasAccess = user.getAccountUserRights().stream()
+                .anyMatch(right -> right.getAccount().getId().equals(accountId));
+
+        if (!hasAccess) {
+            throw new IllegalArgumentException("User does not have access to account: " + accountId);
+        }
+
+        return account;
     }
 }

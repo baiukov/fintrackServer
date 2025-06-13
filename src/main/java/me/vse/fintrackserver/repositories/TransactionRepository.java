@@ -3,6 +3,7 @@ package me.vse.fintrackserver.repositories;
 import me.vse.fintrackserver.model.Account;
 import me.vse.fintrackserver.model.Category;
 import me.vse.fintrackserver.model.Transaction;
+import me.vse.fintrackserver.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Pageable;
@@ -63,4 +64,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     Object[] getAggregatedTransactionsForAccountAndCategory(@Param("account") Account account,
                                                                   @Param("category") Category category);
 
+
+    @Query("""
+        SELECT t FROM Transaction t
+        WHERE (t.account = :user OR t.receiver = :user)
+        AND t.executionDateTime >= :startDate
+        AND t.executionDateTime <= :endDate
+    """)
+    List<Transaction> findAllByAccountAndDaysBetween(Account user, LocalDateTime startDate, LocalDateTime endDate);
 }
